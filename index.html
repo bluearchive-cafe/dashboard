@@ -245,7 +245,7 @@
                 <div class="hero-heading">
                     <div class="mdui-typo">
                         <h1 class="mdui-text-color-on-surface hero-title">蔚蓝咖啡厅控制面板</h1>
-                        <p class="mdui-text-color-on-surface-variant hero-description">请先确认功能状态，再选择需要启用的资源并保存设置。</p>
+                        <p class="mdui-text-color-on-surface-variant hero-description">先查看各项状态，再按需切换开关并保存设置。</p>
                     </div>
                 </div>
             </div>
@@ -259,7 +259,7 @@
                     <mdui-chip id="text-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
                             <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
-                            <span class="status-label">获取中</span>
+                            <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
                     <mdui-switch id="text-checkbox"></mdui-switch>
@@ -273,7 +273,7 @@
                     <mdui-chip id="voice-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
                             <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
-                            <span class="status-label">获取中</span>
+                            <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
                     <mdui-switch id="voice-checkbox"></mdui-switch>
@@ -287,7 +287,7 @@
                     <mdui-chip id="media-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
                             <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
-                            <span class="status-label">获取中</span>
+                            <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
                     <mdui-switch id="media-checkbox"></mdui-switch>
@@ -338,10 +338,10 @@
         mdui.setColorScheme("#1976D2");
 
         const statusStyles = {
-            loading: { text: "获取中", icon: "assets/icons/status-loading.svg" },
-            ready: { text: "可启用", icon: "assets/icons/status-ready.svg" },
-            waiting: { text: "待维护", icon: "assets/icons/status-update.svg" },
-            failed: { text: "未获取", icon: "assets/icons/status-error.svg" }
+            loading: { text: "加载中", icon: "assets/icons/status-loading.svg" },
+            ready: { text: "可用", icon: "assets/icons/status-ready.svg" },
+            waiting: { text: "待更新", icon: "assets/icons/status-update.svg" },
+            failed: { text: "获取失败", icon: "assets/icons/status-error.svg" }
         };
         const resourceVersions = {
             text: null,
@@ -426,14 +426,14 @@
 
         const showHelp = () => {
             showTextDialog({
-                headline: "控制面板使用说明",
+                headline: "操作说明",
                 lines: [
-                    "1. 如果游戏功能异常可暂时关闭文本汉化",
-                    "2. 仅当功能状态为“可启用”时功能生效",
-                    "3. 主线中配功能的生效范围仅限主线故事",
-                    "4. 开启图像视频汉化需重新下载大量资源"
+                    "1. 先确认各项状态，再决定是否开启对应功能",
+                    "2. 只有状态为“可用”时，功能才能正常生效",
+                    "3. 主线中配仅对主线剧情内容生效",
+                    "4. 开启“图像视频”后，可能需要重新下载相关资源"
                 ],
-                confirmText: "我知道了"
+                confirmText: "知道了"
             });
         };
 
@@ -459,7 +459,7 @@
             const viewport = `${window.innerWidth} x ${window.innerHeight}`;
             const screenSize = `${window.screen.width} x ${window.screen.height}`;
             const formatVersionLine = (label, versionInfo) => {
-                if (!versionInfo) return `${label}: 未获取`;
+                if (!versionInfo) return `${label}: 暂无数据`;
                 return `${label}: 官方 ${versionInfo.official} / 汉化 ${versionInfo.localized}`;
             };
 
@@ -489,11 +489,11 @@
         element("copy-button").addEventListener("click", async () => {
             if (!hasUid) {
                 showTextDialog({
-                    headline: "缺少 UID",
+                    headline: "缺少参数",
                     lines: [
-                        "当前链接未包含有效的 UID 参数",
-                        "无法生成可用的控制面板分享链接",
-                        "请通过包含 uid 的完整地址重新打开页面"
+                        "当前链接缺少有效的 UID 参数",
+                        "暂时无法生成分享链接",
+                        "请使用包含 uid 的完整地址重新打开页面"
                     ],
                     confirmText: "关闭"
                 });
@@ -504,16 +504,16 @@
             const copied = await copyText(shareUrl);
 
             showTextDialog({
-                headline: copied ? "链接已复制" : "复制失败",
+                headline: copied ? "复制成功" : "复制失败",
                 lines: copied
                     ? [
                         `UID: ${uid}`,
-                        "已成功复制控制面板链接至剪贴板",
-                        "粘贴至浏览器打开以修改汉化设置",
-                        "请勿随意泄露以免设置被他人修改"
+                        "控制面板链接已复制到剪贴板",
+                        "可粘贴到浏览器中打开",
+                        "请妥善保管，避免被他人修改设置"
                     ]
                     : [
-                        "当前浏览器不允许自动写入剪贴板",
+                        "当前浏览器无法自动写入剪贴板",
                         "请手动复制下面的链接并在浏览器中打开",
                         shareUrl
                     ],
@@ -532,10 +532,10 @@
         element("save-button").addEventListener("click", async () => {
             if (!hasUid) {
                 showTextDialog({
-                    headline: "无法保存设置",
+                    headline: "无法保存",
                     lines: [
-                        "当前链接未包含有效的 UID 参数",
-                        "无法识别要保存到哪个账号的配置",
+                        "当前链接缺少有效的 UID 参数",
+                        "无法确认要保存到哪个账号",
                         "请通过正确的控制面板链接重新进入"
                     ],
                     confirmText: "关闭"
@@ -551,12 +551,12 @@
 
             if (response.ok) {
                 mdui.snackbar({
-                    message: "保存配置成功，重启游戏生效",
+                    message: "设置已保存，重启游戏后生效",
                     closeable: true
                 });
             } else {
                 mdui.snackbar({
-                    message: "保存配置失败，请稍候重试",
+                    message: "保存失败，请稍后重试",
                     closeable: true
                 });
             }
@@ -572,10 +572,10 @@
                     headline: "链接无效",
                     lines: [
                         "当前页面缺少必要的 UID 参数",
-                        "因此无法读取或保存你的资源开关配置",
-                        "请从有效的控制面板链接重新打开本页面"
+                        "暂时无法读取或保存资源开关配置",
+                        "请从有效的控制面板链接重新打开页面"
                     ],
-                    confirmText: "我知道了"
+                    confirmText: "知道了"
                 });
                 return;
             }
