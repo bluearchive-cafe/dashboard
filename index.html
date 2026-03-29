@@ -78,6 +78,7 @@
             width: min(1040px, 100%);
             display: grid;
             gap: 18px;
+            align-content: center;
         }
 
         .hero {
@@ -224,11 +225,13 @@
         }
 
         mdui-dialog [slot="headline"] {
+            margin: 0;
             line-height: 1.35;
             word-break: break-word;
         }
 
         mdui-dialog [slot="description"] {
+            margin: 0;
             max-height: min(48dvh, 320px);
             overflow: auto;
             line-height: 1.7;
@@ -238,7 +241,7 @@
         }
 
         mdui-dialog [slot="action"] {
-            min-width: 96px;
+            min-width: 88px;
         }
 
         @media (max-width: 880px) {
@@ -288,14 +291,139 @@
         }
 
         @media (max-width: 720px), (max-height: 420px) {
+            body {
+                padding: 10px;
+                place-items: stretch;
+            }
+
+            .shell {
+                gap: 10px;
+                align-content: start;
+            }
+
+            .hero {
+                padding: 16px 14px;
+                border-radius: 24px;
+            }
+
+            .hero-copy {
+                gap: 8px;
+                margin-bottom: 12px;
+            }
+
+            .hero-heading {
+                gap: 6px;
+            }
+
+            .hero-title {
+                font-size: 1.45rem;
+                line-height: 1.2;
+            }
+
+            .hero-description {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+
+            .feature-list {
+                border-radius: 18px;
+            }
+
+            .feature-item {
+                gap: 10px;
+                padding: 12px 14px;
+            }
+
+            .feature-title strong {
+                font-size: 16px;
+                line-height: 1.2;
+            }
+
+            .feature-title span {
+                font-size: 12px;
+                line-height: 1.45;
+            }
+
+            .actions {
+                gap: 10px;
+            }
+
+            .actions mdui-button {
+                flex: 1 1 calc(50% - 5px);
+                min-width: 0;
+            }
+
+            .page-footer {
+                padding-top: 0;
+                font-size: 11px;
+                line-height: 1.45;
+            }
+
             mdui-dialog::part(panel) {
-                width: calc(100vw - 16px);
-                max-width: calc(100vw - 16px);
-                max-height: calc(100dvh - 16px);
+                width: calc(100vw - 8px);
+                max-width: calc(100vw - 8px);
+                max-height: calc(100dvh - 8px);
+            }
+
+            mdui-dialog {
+                --mdui-shape-corner-extra-large: 18px;
+            }
+
+            mdui-dialog [slot="headline"] {
+                font-size: 17px;
+                line-height: 1.25;
             }
 
             mdui-dialog [slot="description"] {
-                max-height: min(52dvh, 260px);
+                max-height: min(58dvh, 280px);
+                font-size: 13px;
+                line-height: 1.55;
+            }
+
+            mdui-dialog [slot="action"] {
+                min-width: 72px;
+            }
+        }
+
+        @media (max-height: 420px) {
+            body {
+                overflow-y: auto;
+            }
+
+            .hero {
+                padding: 14px 12px;
+            }
+
+            .feature-item {
+                padding: 10px 12px;
+            }
+
+            .actions {
+                gap: 8px;
+            }
+
+            .actions mdui-button {
+                flex-basis: calc(50% - 4px);
+            }
+
+            mdui-dialog::part(panel) {
+                width: calc(100vw - 4px);
+                max-width: calc(100vw - 4px);
+                max-height: calc(100dvh - 4px);
+            }
+
+            mdui-dialog {
+                --mdui-shape-corner-extra-large: 16px;
+            }
+
+            mdui-dialog [slot="headline"] {
+                font-size: 16px;
+            }
+
+            mdui-dialog [slot="description"] {
+                max-height: 62dvh;
+                font-size: 12px;
+                line-height: 1.45;
             }
         }
     </style>
