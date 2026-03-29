@@ -212,35 +212,6 @@
             height: 16px;
         }
 
-        mdui-dialog {
-            --mdui-shape-corner-extra-large: 24px;
-        }
-
-        mdui-dialog::part(panel) {
-            width: min(560px, calc(100vw - 24px));
-            max-width: calc(100vw - 24px);
-            max-height: min(78dvh, 560px);
-            box-sizing: border-box;
-        }
-
-        mdui-dialog [slot="headline"] {
-            line-height: 1.35;
-            word-break: break-word;
-        }
-
-        mdui-dialog [slot="description"] {
-            max-height: min(48dvh, 320px);
-            overflow: auto;
-            line-height: 1.7;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        mdui-dialog [slot="action"] {
-            min-width: 96px;
-        }
-
         @media (max-width: 880px) {
             body {
                 padding: 18px;
@@ -284,18 +255,6 @@
 
             .actions mdui-button {
                 flex-basis: 100%;
-            }
-        }
-
-        @media (max-width: 720px), (max-height: 420px) {
-            mdui-dialog::part(panel) {
-                width: calc(100vw - 16px);
-                max-width: calc(100vw - 16px);
-                max-height: calc(100dvh - 16px);
-            }
-
-            mdui-dialog [slot="description"] {
-                max-height: min(52dvh, 260px);
             }
         }
     </style>
