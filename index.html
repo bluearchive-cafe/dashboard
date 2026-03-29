@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔚蓝咖啡厅控制面板</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+    <style>
+        :root {
+            color-scheme: light;
+            --panel-bg: rgba(255, 255, 255, 0.58);
+            --surface-bg: rgba(255, 255, 255, 0.68);
+            --surface-border: rgba(255, 255, 255, 0.48);
+            --radius-panel: 32px;
+            --radius-section: 24px;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100dvh;
+            padding: 24px;
+            box-sizing: border-box;
+            font-family: "Noto Sans", "Noto Sans SC", sans-serif;
+            overflow-x: hidden;
+            background-color: rgb(233, 239, 245);
+        }
+
+        .page-background {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .page-background img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%;
+            display: block;
+        }
+
+        .page-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background:
+                linear-gradient(135deg, rgba(238, 246, 255, 0.52), rgba(255, 247, 240, 0.42)),
+                rgba(255, 255, 255, 0.26);
+            backdrop-filter: blur(1px);
+            pointer-events: none;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 2;
+            width: min(1040px, 100%);
+            display: grid;
+            gap: 18px;
+        }
+
+        .hero {
+            padding: 28px;
+            border-radius: var(--radius-panel);
+            background: var(--panel-bg);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 20px 60px rgba(58, 89, 127, 0.16);
+        }
+
+        .hero-copy {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .hero-heading {
+            display: grid;
+            gap: 8px;
+        }
+
+        .hero-title {
+            margin: 0;
+            color: rgb(15, 23, 42);
+        }
+
+        .hero-description {
+            margin: 0;
+            max-width: 62ch;
+            color: rgba(30, 41, 59, 0.78);
+        }
+
+        .feature-list {
+            overflow: hidden;
+            border-radius: var(--radius-section);
+            background: var(--surface-bg);
+            border: 1px solid var(--surface-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+        }
+
+        .feature-item + .feature-item {
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        .feature-title {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .feature-title strong {
+            font-size: 18px;
+        }
+
+        .feature-title span {
+            color: rgba(15, 23, 42, 0.68);
+            font-size: 13px;
+        }
+
+        .feature-status {
+            justify-self: start;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .actions mdui-button {
+            flex: 1 1 220px;
+        }
+
+        .page-footer {
+            justify-self: center;
+            padding: 2px 12px 0;
+            font-size: 12px;
+            line-height: 1.6;
+            color: rgba(15, 23, 42, 0.58);
+            text-align: center;
+        }
+
+        .status-content,
+        .action-content {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ui-icon {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            display: inline-block;
+            background-color: currentColor;
+            mask-position: center;
+            mask-repeat: no-repeat;
+            mask-size: contain;
+            -webkit-mask-position: center;
+            -webkit-mask-repeat: no-repeat;
+            -webkit-mask-size: contain;
+        }
+
+        .feature-status .ui-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        @media (max-width: 880px) {
+            body {
+                padding: 18px;
+            }
+
+            .page-background img {
+                object-position: 60% center;
+            }
+
+            .feature-item {
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            .feature-status {
+                grid-column: 1 / 2;
+            }
+
+            .feature-item mdui-switch {
+                grid-column: 2 / 3;
+                grid-row: 1 / 3;
+            }
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 14px;
+            }
+
+            .page-background img {
+                object-position: 64% center;
+            }
+
+            .hero {
+                padding: 22px 18px;
+                border-radius: 28px;
+            }
+
+            .feature-list {
+                border-radius: 22px;
+            }
+
+            .actions mdui-button {
+                flex-basis: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-background" aria-hidden="true">
+        <img src="assets/images/background.png" alt="">
+    </div>
+    <div class="page-overlay" aria-hidden="true"></div>
+    <div class="shell">
+        <section class="hero mdui-shadow-0">
+            <div class="hero-copy">
+                <div class="hero-heading">
+                    <div class="mdui-typo">
+                        <h1 class="mdui-text-color-on-surface hero-title">蔚蓝咖啡厅控制面板</h1>
+                        <p class="mdui-text-color-on-surface-variant hero-description">实现了一个统一的 WebUI，用于管理游戏资源汉化选项</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-title">
+                        <strong>游戏文本</strong>
+                        <span>控制文本汉化启用状态</span>
+                    </div>
+                    <mdui-chip id="text-status" class="feature-status" variant="assist" elevated>
+                        <span class="status-content">
+                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="status-label">获取中</span>
+                        </span>
+                    </mdui-chip>
+                    <mdui-switch id="text-checkbox"></mdui-switch>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-title">
+                        <strong>主线中配</strong>
+                        <span>控制主线故事中文配音</span>
+                    </div>
+                    <mdui-chip id="voice-status" class="feature-status" variant="assist" elevated>
+                        <span class="status-content">
+                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="status-label">获取中</span>
+                        </span>
+                    </mdui-chip>
+                    <mdui-switch id="voice-checkbox"></mdui-switch>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-title">
+                        <strong>图像视频</strong>
+                        <span>控制媒体资源汉化开关</span>
+                    </div>
+                    <mdui-chip id="media-status" class="feature-status" variant="assist" elevated>
+                        <span class="status-content">
+                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="status-label">获取中</span>
+                        </span>
+                    </mdui-chip>
+                    <mdui-switch id="media-checkbox"></mdui-switch>
+                </div>
+            </div>
+        </section>
+
+        <div class="actions">
+            <mdui-button id="save-button" variant="filled">
+                <span class="action-content">
+                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-save.svg');-webkit-mask-image:url('assets/icons/action-save.svg');"></span>
+                    <span>保存设置</span>
+                </span>
+            </mdui-button>
+            <mdui-button id="read-button" variant="tonal">
+                <span class="action-content">
+                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-help.svg');-webkit-mask-image:url('assets/icons/action-help.svg');"></span>
+                    <span>查看说明</span>
+                </span>
+            </mdui-button>
+            <mdui-button id="copy-button" variant="outlined">
+                <span class="action-content">
+                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-copy-link.svg');-webkit-mask-image:url('assets/icons/action-copy-link.svg');"></span>
+                    <span>复制链接</span>
+                </span>
+            </mdui-button>
+            <mdui-button id="diagnose-button" variant="outlined">
+                <span class="action-content">
+                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-diagnose.svg');-webkit-mask-image:url('assets/icons/action-diagnose.svg');"></span>
+                    <span>诊断信息</span>
+                </span>
+            </mdui-button>
+        </div>
+
+        <footer class="page-footer">
+            Copyright &copy; 2026 蔚蓝咖啡厅. All rights reserved.<br />
+            使用 MDUI 构建 | <span id="webui-version"></span> | Developer: roundRekt, KFACBT
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+    <script>
+        const element = (id) => document.getElementById(id);
+        const uid = new URLSearchParams(location.search).get("uid");
+        const webuiVersion = "WebUI v1.1.1";
+
+        /*  设置页面颜色  */
+        mdui.setColorScheme("#1976D2");
+
+        const statusStyles = {
+            loading: { text: "获取中", icon: "assets/icons/status-loading.svg" },
+            ready: { text: "可启用", icon: "assets/icons/status-ready.svg" },
+            waiting: { text: "待维护", icon: "assets/icons/status-update.svg" },
+            failed: { text: "未获取", icon: "assets/icons/status-error.svg" }
+        };
+        const resourceVersions = {
+            text: null,
+            voice: null,
+            media: null
+        };
+
+        const setStatus = (id, state) => {
+            const chip = element(id);
+            const style = statusStyles[state];
+            chip.querySelector(".status-label").textContent = style.text;
+            chip.querySelector(".ui-icon").style.maskImage = `url('${style.icon}')`;
+            chip.querySelector(".ui-icon").style.webkitMaskImage = `url('${style.icon}')`;
+        };
+
+        const showTextDialog = ({ headline, lines, confirmText }) => {
+            const dialog = document.createElement("mdui-dialog");
+
+            const headlineElement = document.createElement("div");
+            headlineElement.slot = "headline";
+            headlineElement.textContent = headline;
+
+            const descriptionElement = document.createElement("div");
+            descriptionElement.slot = "description";
+            descriptionElement.style.whiteSpace = "pre-line";
+            descriptionElement.textContent = lines.join("\n");
+
+            const actionElement = document.createElement("mdui-button");
+            actionElement.slot = "action";
+            actionElement.variant = "tonal";
+            actionElement.textContent = confirmText;
+            actionElement.addEventListener("click", () => {
+                dialog.open = false;
+            });
+
+            dialog.append(headlineElement, descriptionElement, actionElement);
+            dialog.addEventListener("closed", () => dialog.remove(), { once: true });
+            document.body.append(dialog);
+            dialog.open = true;
+        };
+
+        const showHelp = () => {
+            showTextDialog({
+                headline: "控制面板使用说明",
+                lines: [
+                    "1. 如果游戏功能异常可暂时关闭文本汉化",
+                    "2. 仅当功能状态为“可启用”时功能生效",
+                    "3. 主线中配功能的生效范围仅限主线故事",
+                    "4. 开启图像视频汉化需重新下载大量资源"
+                ],
+                confirmText: "我知道了"
+            });
+        };
+
+        const getBrowserEngineVersion = () => {
+            const { userAgent } = navigator;
+            const edge = userAgent.match(/Edg\/([\d.]+)/);
+            if (edge) return `Chromium ${edge[1]} (Edge)`;
+
+            const chrome = userAgent.match(/Chrome\/([\d.]+)/);
+            if (chrome) return `Chromium ${chrome[1]}`;
+
+            const firefox = userAgent.match(/Firefox\/([\d.]+)/);
+            if (firefox) return `Gecko ${firefox[1]} (Firefox)`;
+
+            const safari = userAgent.match(/Version\/([\d.]+).*Safari/);
+            if (safari) return `WebKit ${safari[1]} (Safari)`;
+
+            return "无法识别";
+        };
+
+        const getDiagnosticsLines = () => {
+            const { userAgent, appVersion, platform, language, languages, onLine, cookieEnabled, hardwareConcurrency, deviceMemory } = navigator;
+            const viewport = `${window.innerWidth} x ${window.innerHeight}`;
+            const screenSize = `${window.screen.width} x ${window.screen.height}`;
+            const formatVersionLine = (label, versionInfo) => {
+                if (!versionInfo) return `${label}: 未获取`;
+                return `${label}: 官方 ${versionInfo.official} / 汉化 ${versionInfo.localized}`;
+            };
+
+            return [
+                `浏览器内核: ${getBrowserEngineVersion()}`,
+                `User-Agent: ${userAgent}`,
+                `App Version: ${appVersion}`,
+                `平台: ${platform || "未知"}`,
+                `语言: ${language || "未知"}`,
+                `语言列表: ${Array.isArray(languages) && languages.length ? languages.join(", ") : "未知"}`,
+                `在线状态: ${onLine ? "在线" : "离线"}`,
+                `Cookie: ${cookieEnabled ? "已启用" : "已禁用"}`,
+                `视口尺寸: ${viewport}`,
+                `屏幕尺寸: ${screenSize}`,
+                `设备像素比: ${window.devicePixelRatio || 1}`,
+                formatVersionLine("文本资源版本", resourceVersions.text),
+                formatVersionLine("语音资源版本", resourceVersions.voice),
+                formatVersionLine("媒体资源版本", resourceVersions.media),
+                /*  `当前地址: ${location.href}`  */
+            ];
+        };
+
+        element("read-button").addEventListener("click", showHelp);
+        element("webui-version").textContent = webuiVersion;
+
+        element("copy-button").addEventListener("click", async () => {
+            await navigator.clipboard.writeText("https://bluearchive.cafe/dash/index.html?uid=" + uid);
+            showTextDialog({
+                headline: "链接已复制",
+                lines: [
+                    `UID: ${uid}`,
+                    "已成功复制控制面板链接至剪贴板",
+                    "粘贴至浏览器打开以修改汉化设置",
+                    "请勿随意泄露以免设置被他人修改"
+                ],
+                confirmText: "关闭"
+            });
+        });
+
+        element("diagnose-button").addEventListener("click", () => {
+            showTextDialog({
+                headline: "诊断信息",
+                lines: getDiagnosticsLines(),
+                confirmText: "关闭"
+            });
+        });
+
+        element("save-button").addEventListener("click", async () => {
+            const text = element("text-checkbox").checked ? "cn" : "jp";
+            const voice = element("voice-checkbox").checked ? "cn" : "jp";
+            const media = element("media-checkbox").checked ? "cn" : "jp";
+            const params = new URLSearchParams({ uid, text, voice, media });
+            const response = await fetch(`https://api.bluearchive.cafe/config/set?${params}`);
+
+            if (response.ok) {
+                mdui.snackbar({
+                    message: "保存配置成功，重启游戏生效",
+                    closeable: true
+                });
+            } else {
+                mdui.snackbar({
+                    message: "保存配置失败，请稍候重试",
+                    closeable: true
+                });
+            }
+        });
+
+        const init = async () => {
+            const [statusRes, configRes] = await Promise.all([
+                fetch("https://api.bluearchive.cafe/status/list"),
+                fetch("https://api.bluearchive.cafe/config/get?uid=" + uid)
+            ]);
+
+            if (statusRes.ok) {
+                const status = await statusRes.json();
+                resourceVersions.text = {
+                    official: status.text.official.version,
+                    localized: status.text.localized.version
+                };
+                resourceVersions.voice = {
+                    official: status.voice.official.version,
+                    localized: status.voice.localized.version
+                };
+                resourceVersions.media = {
+                    official: status.media.official.version,
+                    localized: status.media.localized.version
+                };
+                const textSynced = status.text.official.version === status.text.localized.version;
+                const voiceSynced = status.voice.official.version === status.voice.localized.version;
+                const mediaSynced = status.media.official.version === status.media.localized.version;
+                setStatus("text-status", textSynced ? "ready" : "waiting");
+                setStatus("voice-status", voiceSynced ? "ready" : "waiting");
+                setStatus("media-status", mediaSynced ? "ready" : "waiting");
+            } else {
+                setStatus("text-status", "failed");
+                setStatus("voice-status", "failed");
+                setStatus("media-status", "failed");
+            }
+
+            if (configRes.ok) {
+                const { text, voice, media } = await configRes.json();
+                element("text-checkbox").checked = text === "cn";
+                element("voice-checkbox").checked = voice === "cn";
+                element("media-checkbox").checked = media === "cn";
+            }
+        };
+
+        init().catch(() => {
+            setStatus("text-status", "failed");
+            setStatus("voice-status", "failed");
+            setStatus("media-status", "failed");
+        });
+    </script>
+</body>
+
+</html>
