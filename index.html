@@ -348,6 +348,13 @@
             voice: null,
             media: null
         };
+        const hasUid = typeof uid === "string" && uid.trim() !== "";
+
+        const toggleInteractiveState = (disabled) => {
+            ["text-checkbox", "voice-checkbox", "media-checkbox", "save-button", "copy-button"].forEach((id) => {
+                element(id).disabled = disabled;
+            });
+        };
 
         const setStatus = (id, state) => {
             const chip = element(id);
@@ -426,6 +433,7 @@
                 `浏览器内核: ${getBrowserEngineVersion()}`,
                 `User-Agent: ${userAgent}`,
                 `App Version: ${appVersion}`,
+                `控制面板 UID: ${hasUid ? uid : "未提供"}`,
                 `平台: ${platform || "未知"}`,
                 `语言: ${language || "未知"}`,
                 `语言列表: ${Array.isArray(languages) && languages.length ? languages.join(", ") : "未知"}`,
@@ -445,6 +453,19 @@
         element("webui-version").textContent = webuiVersion;
 
         element("copy-button").addEventListener("click", async () => {
+            if (!hasUid) {
+                showTextDialog({
+                    headline: "缺少 UID",
+                    lines: [
+                        "当前链接未包含有效的 UID 参数",
+                        "无法生成可用的控制面板分享链接",
+                        "请通过包含 uid 的完整地址重新打开页面"
+                    ],
+                    confirmText: "关闭"
+                });
+                return;
+            }
+
             await navigator.clipboard.writeText("https://bluearchive.cafe/dash/index.html?uid=" + uid);
             showTextDialog({
                 headline: "链接已复制",
@@ -467,6 +488,19 @@
         });
 
         element("save-button").addEventListener("click", async () => {
+            if (!hasUid) {
+                showTextDialog({
+                    headline: "无法保存设置",
+                    lines: [
+                        "当前链接未包含有效的 UID 参数",
+                        "无法识别要保存到哪个账号的配置",
+                        "请通过正确的控制面板链接重新进入"
+                    ],
+                    confirmText: "关闭"
+                });
+                return;
+            }
+
             const text = element("text-checkbox").checked ? "cn" : "jp";
             const voice = element("voice-checkbox").checked ? "cn" : "jp";
             const media = element("media-checkbox").checked ? "cn" : "jp";
@@ -487,6 +521,23 @@
         });
 
         const init = async () => {
+            if (!hasUid) {
+                toggleInteractiveState(true);
+                setStatus("text-status", "failed");
+                setStatus("voice-status", "failed");
+                setStatus("media-status", "failed");
+                showTextDialog({
+                    headline: "链接无效",
+                    lines: [
+                        "当前页面缺少必要的 UID 参数",
+                        "因此无法读取或保存你的资源开关配置",
+                        "请从有效的控制面板链接重新打开本页面"
+                    ],
+                    confirmText: "我知道了"
+                });
+                return;
+            }
+
             const [statusRes, configRes] = await Promise.all([
                 fetch("https://api.bluearchive.cafe/status/list"),
                 fetch("https://api.bluearchive.cafe/config/get?uid=" + uid)
