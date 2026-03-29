@@ -245,7 +245,7 @@
                 <div class="hero-heading">
                     <div class="mdui-typo">
                         <h1 class="mdui-text-color-on-surface hero-title">蔚蓝咖啡厅控制面板</h1>
-                        <p class="mdui-text-color-on-surface-variant hero-description">实现了一个统一的 WebUI，用于管理游戏资源汉化选项</p>
+                        <p class="mdui-text-color-on-surface-variant hero-description">请先确认功能状态，再选择需要启用的资源并保存设置。</p>
                     </div>
                 </div>
             </div>
@@ -390,6 +390,40 @@
             dialog.open = true;
         };
 
+        const fallbackCopyText = (text) => {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.setAttribute("readonly", "");
+            textArea.style.position = "fixed";
+            textArea.style.top = "-9999px";
+            textArea.style.opacity = "0";
+            document.body.append(textArea);
+            textArea.focus();
+            textArea.select();
+
+            let copied = false;
+            try {
+                copied = document.execCommand("copy");
+            } finally {
+                textArea.remove();
+            }
+
+            return copied;
+        };
+
+        const copyText = async (text) => {
+            if (navigator.clipboard?.writeText) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch {
+                    return fallbackCopyText(text);
+                }
+            }
+
+            return fallbackCopyText(text);
+        };
+
         const showHelp = () => {
             showTextDialog({
                 headline: "控制面板使用说明",
@@ -466,15 +500,23 @@
                 return;
             }
 
-            await navigator.clipboard.writeText("https://bluearchive.cafe/dash/index.html?uid=" + uid);
+            const shareUrl = "https://bluearchive.cafe/dash/index.html?uid=" + uid;
+            const copied = await copyText(shareUrl);
+
             showTextDialog({
-                headline: "链接已复制",
-                lines: [
-                    `UID: ${uid}`,
-                    "已成功复制控制面板链接至剪贴板",
-                    "粘贴至浏览器打开以修改汉化设置",
-                    "请勿随意泄露以免设置被他人修改"
-                ],
+                headline: copied ? "链接已复制" : "复制失败",
+                lines: copied
+                    ? [
+                        `UID: ${uid}`,
+                        "已成功复制控制面板链接至剪贴板",
+                        "粘贴至浏览器打开以修改汉化设置",
+                        "请勿随意泄露以免设置被他人修改"
+                    ]
+                    : [
+                        "当前浏览器不允许自动写入剪贴板",
+                        "请手动复制下面的链接并在浏览器中打开",
+                        shareUrl
+                    ],
                 confirmText: "关闭"
             });
         });
