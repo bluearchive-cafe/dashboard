@@ -358,7 +358,30 @@
     <script>
         const element = (id) => document.getElementById(id);
         const uid = new URLSearchParams(location.search).get("uid");
-        const webuiVersion = "WebUI v1.1.3";
+        const webuiVersion = "WebUI v1.1.5_NoMobileFix";
+        const APP_CONFIG = {
+            assets: {
+                icons: {
+                    actionSave: "assets/icons/action-save.svg",
+                    actionHelp: "assets/icons/action-help.svg",
+                    actionCopyLink: "assets/icons/action-copy-link.svg",
+                    actionDiagnose: "assets/icons/action-diagnose.svg",
+                    statusLoading: "assets/icons/status-loading.svg",
+                    statusReady: "assets/icons/status-ready.svg",
+                    statusUpdate: "assets/icons/status-update.svg",
+                    statusError: "assets/icons/status-error.svg"
+                }
+            },
+            urls: {
+                apiBase: "https://api.bluearchive.cafe",
+                shareBase: "https://dash.bluearchive.cafe"
+            }
+        };
+        const API_ENDPOINTS = {
+            statusList: `${APP_CONFIG.urls.apiBase}/status/list`,
+            configGet: `${APP_CONFIG.urls.apiBase}/config/get`,
+            configSet: `${APP_CONFIG.urls.apiBase}/config/set`
+        };
 
         /*  让 MDUI 组件跟随系统深浅色 */
         mdui.setTheme("auto");
@@ -367,10 +390,10 @@
         mdui.setColorScheme("#1976D2");
 
         const statusStyles = {
-            loading: { text: "加载中", icon: "assets/icons/status-loading.svg" },
-            ready: { text: "可用", icon: "assets/icons/status-ready.svg" },
-            waiting: { text: "待更新", icon: "assets/icons/status-update.svg" },
-            failed: { text: "获取失败", icon: "assets/icons/status-error.svg" }
+            loading: { text: "加载中", icon: APP_CONFIG.assets.icons.statusLoading },
+            ready: { text: "可用", icon: APP_CONFIG.assets.icons.statusReady },
+            waiting: { text: "待更新", icon: APP_CONFIG.assets.icons.statusUpdate },
+            failed: { text: "获取失败", icon: APP_CONFIG.assets.icons.statusError }
         };
         const resourceVersions = {
             text: null,
@@ -489,14 +512,13 @@
             const screenSize = `${window.screen.width} x ${window.screen.height}`;
             const formatVersionLine = (label, versionInfo) => {
                 if (!versionInfo) return `${label}: 暂无数据`;
-                return `${label}: 官方 ${versionInfo.official} / 汉化 ${versionInfo.localized}`;
+                return `${label}: \n * 官方: ${versionInfo.official} \n * 汉化: ${versionInfo.localized}`;
             };
 
             return [
                 `浏览器内核: ${getBrowserEngineVersion()}`,
                 `User-Agent: ${userAgent}`,
                 `App Version: ${appVersion}`,
-                `控制面板 UID: ${hasUid ? uid : "未提供"}`,
                 `平台: ${platform || "未知"}`,
                 `语言: ${language || "未知"}`,
                 `语言列表: ${Array.isArray(languages) && languages.length ? languages.join(", ") : "未知"}`,
@@ -505,10 +527,11 @@
                 `视口尺寸: ${viewport}`,
                 `屏幕尺寸: ${screenSize}`,
                 `设备像素比: ${window.devicePixelRatio || 1}`,
+                `控制面板 UID: ${hasUid ? uid : "未提供"}`,
+                `当前地址: ${location.href}`,
                 formatVersionLine("文本资源版本", resourceVersions.text),
                 formatVersionLine("语音资源版本", resourceVersions.voice),
-                formatVersionLine("媒体资源版本", resourceVersions.media),
-                /*  `当前地址: ${location.href}`  */
+                formatVersionLine("媒体资源版本", resourceVersions.media)
             ];
         };
 
@@ -529,7 +552,7 @@
                 return;
             }
 
-            const shareUrl = "https://bluearchive.cafe/dash/index.html?uid=" + uid;
+            const shareUrl = `${APP_CONFIG.urls.shareBase}?uid=${uid}`;
             const copied = await copyText(shareUrl);
 
             showTextDialog({
@@ -576,7 +599,7 @@
             const voice = element("voice-checkbox").checked ? "cn" : "jp";
             const media = element("media-checkbox").checked ? "cn" : "jp";
             const params = new URLSearchParams({ uid, text, voice, media });
-            const response = await fetch(`https://api.bluearchive.cafe/config/set?${params}`);
+            const response = await fetch(`${API_ENDPOINTS.configSet}?${params}`);
 
             if (response.ok) {
                 mdui.snackbar({
@@ -610,8 +633,8 @@
             }
 
             const [statusRes, configRes] = await Promise.all([
-                fetch("https://api.bluearchive.cafe/status/list"),
-                fetch("https://api.bluearchive.cafe/config/get?uid=" + uid)
+                fetch(API_ENDPOINTS.statusList),
+                fetch(`${API_ENDPOINTS.configGet}?uid=${uid}`)
             ]);
 
             if (statusRes.ok) {
