@@ -222,6 +222,12 @@
             max-width: calc(100vw - 24px);
             max-height: min(78dvh, 560px);
             box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        mdui-dialog::part(body) {
+            min-height: 0;
+            overflow: hidden;
         }
 
         mdui-dialog [slot="headline"] {
@@ -234,6 +240,8 @@
             margin: 0;
             max-height: min(48dvh, 320px);
             overflow: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable both-edges;
             line-height: 1.7;
             word-break: break-word;
             overflow-wrap: anywhere;
@@ -242,6 +250,12 @@
 
         mdui-dialog [slot="action"] {
             min-width: 88px;
+        }
+
+        mdui-dialog::part(action) {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            gap: 8px;
         }
 
         @media (max-width: 880px) {
@@ -378,10 +392,17 @@
                 max-height: min(58dvh, 280px);
                 font-size: 13px;
                 line-height: 1.55;
+                scrollbar-gutter: auto;
             }
 
             mdui-dialog [slot="action"] {
                 min-width: 72px;
+            }
+
+            mdui-dialog::part(action) {
+                padding-top: 4px;
+                padding-bottom: 6px;
+                gap: 6px;
             }
         }
 
@@ -424,6 +445,40 @@
                 max-height: 62dvh;
                 font-size: 12px;
                 line-height: 1.45;
+                overscroll-behavior: contain;
+            }
+
+            mdui-dialog::part(action) {
+                padding-top: 2px;
+                padding-bottom: 4px;
+                gap: 4px;
+            }
+        }
+
+        @media (max-height: 260px) {
+            mdui-dialog [slot="headline"] {
+                font-size: 14px;
+                line-height: 1.15;
+            }
+
+            mdui-dialog [slot="description"] {
+                max-height: 72dvh;
+                font-size: 11px;
+                line-height: 1.35;
+                overscroll-behavior: contain;
+            }
+
+            mdui-dialog [slot="action"] {
+                min-width: 56px;
+                margin: 0;
+                --mdui-comp-button-container-height: 32px;
+                --mdui-comp-button-label-text-size: 13px;
+            }
+
+            mdui-dialog::part(action) {
+                padding-top: 0;
+                padding-bottom: 0;
+                gap: 2px;
             }
         }
     </style>
