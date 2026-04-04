@@ -1,6 +1,6 @@
 const element = (id) => document.getElementById(id);
 const uid = new URLSearchParams(location.search).get("uid");
-const webuiVersion = "WebUI v1.1.5";
+const webuiVersion = "WebUI v1.1.6";
 const APP_CONFIG = {
     assets: {
         icons: {
@@ -58,8 +58,22 @@ const setStatus = (id, state) => {
     chip.querySelector(".ui-icon").style.webkitMaskImage = `url('${style.icon}')`;
 };
 
-const showTextDialog = ({ headline, lines, confirmText }) => {
+const showTextDialog = ({
+    headline,
+    lines,
+    actions = [],
+    closeOnOverlayClick = true,
+    closeOnEsc = true
+}) => {
     const dialog = document.createElement("mdui-dialog");
+
+    if (closeOnOverlayClick) {
+        dialog.setAttribute("close-on-overlay-click", "");
+    }
+
+    if (closeOnEsc) {
+        dialog.setAttribute("close-on-esc", "");
+    }
 
     const headlineElement = document.createElement("div");
     headlineElement.slot = "headline";
@@ -70,15 +84,25 @@ const showTextDialog = ({ headline, lines, confirmText }) => {
     descriptionElement.style.whiteSpace = "pre-line";
     descriptionElement.textContent = lines.join("\n");
 
-    const actionElement = document.createElement("mdui-button");
-    actionElement.slot = "action";
-    actionElement.variant = "tonal";
-    actionElement.textContent = confirmText;
-    actionElement.addEventListener("click", () => {
-        dialog.open = false;
+    dialog.append(headlineElement, descriptionElement);
+
+    actions.forEach(({ text, variant = "text", onClick, closeOnClick = false }) => {
+        const actionElement = document.createElement("mdui-button");
+        actionElement.slot = "action";
+        actionElement.variant = variant;
+        actionElement.textContent = text;
+        actionElement.addEventListener("click", async () => {
+            if (typeof onClick === "function") {
+                await onClick(dialog);
+            }
+
+            if (closeOnClick) {
+                dialog.open = false;
+            }
+        });
+        dialog.append(actionElement);
     });
 
-    dialog.append(headlineElement, descriptionElement, actionElement);
     dialog.addEventListener("closed", () => dialog.remove(), { once: true });
     document.body.append(dialog);
     dialog.open = true;
@@ -127,7 +151,13 @@ const showHelp = () => {
             "3. 主线中配仅对主线剧情内容生效",
             "4. 开启“图像视频”后，可能需要重新下载相关资源"
         ],
-        confirmText: "知道了"
+        actions: [
+            {
+                text: "知道了",
+                variant: "tonal",
+                closeOnClick: true
+            }
+        ]
     });
 };
 
@@ -189,7 +219,15 @@ element("copy-button").addEventListener("click", async () => {
                 "暂时无法生成分享链接",
                 "请使用包含 uid 的完整地址重新打开页面"
             ],
-            confirmText: "关闭"
+            closeOnOverlayClick: false,
+            closeOnEsc: false,
+            actions: [
+                {
+                    text: "关闭",
+                    variant: "tonal",
+                    closeOnClick: true
+                }
+            ]
         });
         return;
     }
@@ -211,15 +249,39 @@ element("copy-button").addEventListener("click", async () => {
                 "请手动复制下面的链接并在浏览器中打开",
                 shareUrl
             ],
-        confirmText: "关闭"
+        actions: [
+            {
+                text: "关闭",
+                variant: "tonal",
+                closeOnClick: true
+            }
+        ]
     });
 });
 
 element("diagnose-button").addEventListener("click", () => {
+    const diagnosticsLines = getDiagnosticsLines();
     showTextDialog({
         headline: "诊断信息",
-        lines: getDiagnosticsLines(),
-        confirmText: "关闭"
+        lines: diagnosticsLines,
+        actions: [
+            {
+                text: "复制",
+                variant: "text",
+                onClick: async () => {
+                    const copied = await copyText(diagnosticsLines.join("\n"));
+                    mdui.snackbar({
+                        message: copied ? "诊断信息已复制到剪贴板" : "复制失败，请手动复制诊断信息",
+                        closeable: true
+                    });
+                }
+            },
+            {
+                text: "关闭",
+                variant: "tonal",
+                closeOnClick: true
+            }
+        ]
     });
 });
 
@@ -232,7 +294,15 @@ element("save-button").addEventListener("click", async () => {
                 "无法确认要保存到哪个账号",
                 "请通过正确的控制面板链接重新进入"
             ],
-            confirmText: "关闭"
+            closeOnOverlayClick: false,
+            closeOnEsc: false,
+            actions: [
+                {
+                    text: "关闭",
+                    variant: "tonal",
+                    closeOnClick: true
+                }
+            ]
         });
         return;
     }
@@ -269,7 +339,15 @@ const init = async () => {
                 "暂时无法读取或保存资源开关配置",
                 "请从有效的控制面板链接重新打开页面"
             ],
-            confirmText: "知道了"
+            closeOnOverlayClick: false,
+            closeOnEsc: false,
+            actions: [
+                {
+                    text: "知道了",
+                    variant: "tonal",
+                    closeOnClick: true
+                }
+            ]
         });
         return;
     }
