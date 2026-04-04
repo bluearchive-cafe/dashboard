@@ -1,0 +1,201 @@
+@media (max-width: 720px),
+(max-height: 420px) {
+    body {
+        padding: 10px;
+        place-items: stretch;
+    }
+
+    .shell {
+        gap: 10px;
+        align-content: start;
+    }
+
+    .hero {
+        padding: 16px 14px;
+        border-radius: 24px;
+    }
+
+    .hero-copy {
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .hero-heading {
+        gap: 6px;
+    }
+
+    .hero-title {
+        font-size: 1.45rem;
+        line-height: 1.2;
+    }
+
+    .hero-description {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .feature-list {
+        border-radius: 18px;
+    }
+
+    .feature-item {
+        gap: 10px;
+        padding: 12px 14px;
+    }
+
+    .feature-title strong {
+        font-size: 16px;
+        line-height: 1.2;
+    }
+
+    .feature-title span {
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .actions {
+        gap: 10px;
+    }
+
+    .actions mdui-button {
+        flex: 1 1 calc(50% - 5px);
+        min-width: 0;
+    }
+
+    .page-footer {
+        padding-top: 0;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    mdui-dialog {
+        --mdui-shape-corner-extra-large: 18px;
+    }
+
+    mdui-dialog::part(panel) {
+        width: calc(100vw - 8px);
+        max-width: calc(100vw - 8px);
+        max-height: calc(100dvh - 8px);
+        box-sizing: border-box;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    mdui-dialog [slot="headline"] {
+        margin: 0;
+        font-size: 17px;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    mdui-dialog [slot="description"] {
+        margin: 0;
+        max-height: none;
+        overflow: visible;
+        overflow-wrap: anywhere;
+        font-size: 13px;
+        line-height: 1.55;
+        word-break: break-word;
+    }
+
+    mdui-dialog [slot="action"] {
+        min-width: 72px;
+    }
+
+    mdui-dialog::part(body) {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    mdui-dialog::part(action) {
+        flex: 0 0 auto;
+        padding-top: 4px;
+        padding-bottom: 6px;
+        gap: 6px;
+    }
+}
+
+@media (max-height: 420px) {
+    body {
+        overflow-y: auto;
+    }
+
+    .hero {
+        padding: 14px 12px;
+    }
+
+    .feature-item {
+        padding: 10px 12px;
+    }
+
+    .actions {
+        gap: 8px;
+    }
+
+    .actions mdui-button {
+        flex-basis: calc(50% - 4px);
+    }
+
+    mdui-dialog::part(panel) {
+        width: calc(100vw - 4px);
+        max-width: calc(100vw - 4px);
+        max-height: calc(100dvh - 4px);
+        display: flex;
+        flex-direction: column;
+    }
+
+    mdui-dialog {
+        --mdui-shape-corner-extra-large: 16px;
+    }
+
+    mdui-dialog [slot="headline"] {
+        font-size: 16px;
+    }
+
+    mdui-dialog [slot="description"] {
+        max-height: none;
+        font-size: 12px;
+        line-height: 1.45;
+        overflow: visible;
+        scrollbar-gutter: auto;
+    }
+
+    mdui-dialog::part(action) {
+        flex: 0 0 auto;
+        padding-top: 2px;
+        padding-bottom: 4px;
+        gap: 4px;
+    }
+}
+
+@media (max-height: 260px) {
+    mdui-dialog [slot="headline"] {
+        font-size: 14px;
+        line-height: 1.15;
+    }
+
+    mdui-dialog [slot="description"] {
+        max-height: none;
+        font-size: 11px;
+        line-height: 1.35;
+        overflow: visible;
+    }
+
+    mdui-dialog [slot="action"] {
+        min-width: 56px;
+        margin: 0;
+        --mdui-comp-button-container-height: 32px;
+        --mdui-comp-button-label-text-size: 13px;
+    }
+
+    mdui-dialog::part(action) {
+        padding-top: 0;
+        padding-bottom: 0;
+        gap: 2px;
+    }
+}
