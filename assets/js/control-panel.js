@@ -34,7 +34,7 @@ mdui.setColorScheme("#1976D2");
 const statusStyles = {
     loading: { text: "加载中", icon: APP_CONFIG.assets.icons.statusLoading },
     ready: { text: "可用", icon: APP_CONFIG.assets.icons.statusReady },
-    waiting: { text: "待更新", icon: APP_CONFIG.assets.icons.statusUpdate },
+    waiting: { text: "待维护", icon: APP_CONFIG.assets.icons.statusUpdate },
     failed: { text: "获取失败", icon: APP_CONFIG.assets.icons.statusError }
 };
 const resourceVersions = {
