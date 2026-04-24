@@ -1,6 +1,7 @@
 const element = (id) => document.getElementById(id);
 const uid = new URLSearchParams(location.search).get("uid");
-const webuiVersion = "WebUI v1.1.6";
+const webuiVersion = "WebUI v1.1.7 Beta";
+const UI_COMPAT_STORAGE_KEY = "bluearchivecafe-webui-compat-enabled";
 const APP_CONFIG = {
     assets: {
         icons: {
@@ -43,6 +44,35 @@ const resourceVersions = {
     media: null
 };
 const hasUid = typeof uid === "string" && uid.trim() !== "";
+const compatButtonLabel = element("compat-button-label");
+
+const isUiCompatEnabled = () => document.body.classList.contains("ui-compat-enabled");
+
+const updateCompatButton = () => {
+    const enabled = isUiCompatEnabled();
+    compatButtonLabel.textContent = enabled ? "退出 UI 兼容布局" : "启用 UI 兼容布局";
+    element("compat-button").variant = enabled ? "tonal" : "outlined";
+    element("compat-button").setAttribute("aria-pressed", String(enabled));
+};
+
+const setUiCompatEnabled = (enabled) => {
+    document.body.classList.toggle("ui-compat-enabled", enabled);
+    updateCompatButton();
+
+    try {
+        localStorage.setItem(UI_COMPAT_STORAGE_KEY, enabled ? "1" : "0");
+    } catch {
+        // Ignore storage failures and keep the current session state.
+    }
+};
+
+const initUiCompatPreference = () => {
+    try {
+        setUiCompatEnabled(localStorage.getItem(UI_COMPAT_STORAGE_KEY) === "1");
+    } catch {
+        updateCompatButton();
+    }
+};
 
 const toggleInteractiveState = (disabled) => {
     ["text-checkbox", "voice-checkbox", "media-checkbox", "save-button", "copy-button"].forEach((id) => {
@@ -199,6 +229,7 @@ const getDiagnosticsLines = () => {
         `视口尺寸: ${viewport}`,
         `屏幕尺寸: ${screenSize}`,
         `设备像素比: ${window.devicePixelRatio || 1}`,
+        `UI 兼容模式: ${isUiCompatEnabled() ? "已启用" : "未启用"}`,
         `控制面板 UID: ${hasUid ? uid : "未提供"}`,
         `当前地址: ${location.href}`,
         formatVersionLine("文本资源版本", resourceVersions.text),
@@ -209,6 +240,14 @@ const getDiagnosticsLines = () => {
 
 element("read-button").addEventListener("click", showHelp);
 element("webui-version").textContent = webuiVersion;
+element("compat-button").addEventListener("click", () => {
+    const nextEnabled = !isUiCompatEnabled();
+    setUiCompatEnabled(nextEnabled);
+    mdui.snackbar({
+        message: nextEnabled ? "已启用移动端优化布局" : "已恢复默认布局",
+        closeable: true
+    });
+});
 
 element("copy-button").addEventListener("click", async () => {
     if (!hasUid) {
@@ -391,6 +430,7 @@ const init = async () => {
     }
 };
 
+initUiCompatPreference();
 init().catch(() => {
     setStatus("text-status", "failed");
     setStatus("voice-status", "failed");
