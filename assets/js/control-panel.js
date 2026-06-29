@@ -48,6 +48,7 @@ const resourceVersions = {
     media: null
 };
 const hasUid = typeof uid === "string" && uid.trim() !== "";
+const isValidUid = hasUid && /^[A-Z]{8}$/.test(uid.trim());
 
 /* ——————————————————————————————
  * 网络层：超时 + 重试
@@ -596,6 +597,31 @@ const init = async () => {
                 "当前页面缺少必要的 UID 参数",
                 "暂时无法读取或保存资源开关配置",
                 "请从游戏内公告 → 活动 → 控制面板进入，通过完整链接重新打开页面"
+            ],
+            closeOnOverlayClick: false,
+            closeOnEsc: false,
+            actions: [
+                {
+                    text: "知道了",
+                    variant: "tonal",
+                    closeOnClick: true
+                }
+            ]
+        });
+        return;
+    }
+
+    if (!isValidUid) {
+        toggleInteractiveState(true);
+        setStatus("text-status", "failed");
+        setStatus("voice-status", "failed");
+        setStatus("media-status", "failed");
+        showTextDialog({
+            headline: "UID 格式无效",
+            lines: [
+                "正确的 UID 应为八位随机大写字母（如 ABCDEFGH）",
+                "请在游戏内公告 → 异常通知 → UID 中查看正确的 UID",
+                "确认后通过完整链接重新打开页面"
             ],
             closeOnOverlayClick: false,
             closeOnEsc: false,
