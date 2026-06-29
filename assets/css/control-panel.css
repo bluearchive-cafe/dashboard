@@ -11,11 +11,21 @@
     --overlay-gradient:
         linear-gradient(135deg, rgba(238, 246, 255, 0.52), rgba(255, 247, 240, 0.42)),
         rgba(255, 255, 255, 0.26);
-    --hero-shadow: 0 20px 60px rgba(58, 89, 127, 0.16);
 
-    /* 形状 */
-    --radius-panel: 32px;
-    --radius-section: 24px;
+    /*
+     * M3 Elevation Level 3 结构 + 品牌色微调
+     * 标准 L3: 0 1px 3px rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15)
+     * 此处保留微弱的品牌蓝色调，但强度对齐 M3
+     */
+    --hero-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 4px 12px 2px rgba(58, 89, 127, 0.12);
+
+    /*
+     * M3 Shape Scale 对齐
+     * Extra Large = 28px (--mdui-shape-corner-extra-large)
+     * Large       = 16px (--mdui-shape-corner-large)
+     */
+    --radius-panel: var(--mdui-shape-corner-extra-large, 28px);
+    --radius-section: 20px; /* 介于 Large(16px) 与 Extra Large(28px) 之间，嵌套卡片略小于外层 */
 
     /*
      * ——— M3 语义 Token 映射 ———
@@ -78,7 +88,7 @@ body {
     z-index: 2;
     width: min(1040px, 100%);
     display: grid;
-    gap: 18px;
+    gap: 20px; /* M3 4dp 刻度 */
     align-content: center;
 }
 
@@ -103,12 +113,18 @@ body {
 
 .hero-title {
     margin: 0;
+    font-size: var(--mdui-typo-headline-small-size, 24px);
+    font-weight: 700;
+    line-height: var(--mdui-typo-headline-small-line-height, 32px);
     color: var(--hero-title-color);
 }
 
 .hero-description {
     margin: 0;
     max-width: 62ch;
+    font-size: var(--mdui-typo-body-medium-size, 14px);
+    font-weight: var(--mdui-typo-body-medium-weight, 400);
+    line-height: var(--mdui-typo-body-medium-line-height, 20px);
     color: var(--hero-description-color);
 }
 
@@ -124,11 +140,11 @@ body {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 16px;
+    gap: 16px; /* M3 4dp 刻度 */
     padding: 18px 20px;
 }
 
-.feature-item+.feature-item {
+.feature-item + .feature-item {
     border-top: 1px solid var(--item-divider);
 }
 
@@ -139,13 +155,16 @@ body {
 }
 
 .feature-title strong {
-    font-size: var(--mdui-typescale-title-medium-size, 18px);
-    font-weight: var(--mdui-typescale-title-medium-weight, 700);
+    font-size: var(--mdui-typo-title-medium-size, 16px);
+    font-weight: 700;
+    line-height: var(--mdui-typo-title-medium-line-height, 24px);
 }
 
 .feature-title span {
     color: var(--feature-title-muted);
-    font-size: var(--mdui-typescale-body-small-size, 13px);
+    font-size: var(--mdui-typo-body-medium-size, 14px);
+    font-weight: var(--mdui-typo-body-medium-weight, 400);
+    line-height: var(--mdui-typo-body-medium-line-height, 20px);
 }
 
 .feature-status {
@@ -155,7 +174,7 @@ body {
 .actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 16px; /* M3 4dp 刻度 */
 }
 
 .actions mdui-button {
@@ -165,11 +184,16 @@ body {
 .page-footer {
     justify-self: center;
     padding: 2px 12px 0;
-    font-size: var(--mdui-typescale-label-medium-size, 12px);
-    line-height: 1.6;
+    font-size: var(--mdui-typo-body-medium-size, 14px);
+    font-weight: var(--mdui-typo-body-medium-weight, 400);
+    line-height: var(--mdui-typo-body-medium-line-height, 20px);
     color: var(--footer-color);
     text-align: center;
 }
+
+/* ——————————————————————————————
+ * 暗色主题
+ * —————————————————————————————— */
 
 @media (prefers-color-scheme: dark) {
     :root {
@@ -180,7 +204,13 @@ body {
         --overlay-gradient:
             linear-gradient(135deg, rgba(7, 23, 46, 0.5), rgba(7, 43, 79, 0.26)),
             rgba(3, 10, 18, 0.34);
-        --hero-shadow: 0 24px 70px rgba(2, 6, 15, 0.5);
+
+        /*
+         * 暗色 M3 Elevation：阴影更暗但更紧凑
+         * M3 暗色下 elevation 主要通过 surface tone 提亮表达，
+         * 阴影仅作为辅助，应比亮色主题更收敛
+         */
+        --hero-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px 2px rgba(0, 0, 0, 0.28);
 
         /*
          * 文本色与边框色由 MDUI 的 M3 token 自动切换：
@@ -193,6 +223,10 @@ body {
          */
     }
 }
+
+/* ——————————————————————————————
+ * 图标与内容布局
+ * —————————————————————————————— */
 
 .status-content,
 .action-content {
@@ -220,7 +254,32 @@ body {
     height: 16px;
 }
 
-/* 屏幕阅读器专用（视觉隐藏但可被读屏捕获） */
+/* —— 状态图标 CSS class 驱动（替代 inline style）—— */
+
+.status-icon-loading {
+    mask-image: url('../icons/status-loading.svg');
+    -webkit-mask-image: url('../icons/status-loading.svg');
+}
+
+.status-icon-ready {
+    mask-image: url('../icons/status-ready.svg');
+    -webkit-mask-image: url('../icons/status-ready.svg');
+}
+
+.status-icon-waiting {
+    mask-image: url('../icons/status-update.svg');
+    -webkit-mask-image: url('../icons/status-update.svg');
+}
+
+.status-icon-failed {
+    mask-image: url('../icons/status-error.svg');
+    -webkit-mask-image: url('../icons/status-error.svg');
+}
+
+/* ——————————————————————————————
+ * 屏幕阅读器专用（视觉隐藏但可被读屏捕获）
+ * —————————————————————————————— */
+
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -241,6 +300,10 @@ body {
 .feature-status.status-error .status-content {
     color: var(--mdui-color-error);
 }
+
+/* ——————————————————————————————
+ * 响应式：中等宽度
+ * —————————————————————————————— */
 
 @media (max-width: 880px) {
     body {
@@ -277,17 +340,21 @@ body {
 
     .hero {
         padding: 22px 18px;
-        border-radius: 28px;
+        border-radius: 24px;
     }
 
     .feature-list {
-        border-radius: 22px;
+        border-radius: 18px;
     }
 
     .actions mdui-button {
         flex-basis: 100%;
     }
 }
+
+/* ——————————————————————————————
+ * prefers-reduced-motion
+ * —————————————————————————————— */
 
 @media (prefers-reduced-motion: reduce) {
     *,

@@ -1,3 +1,7 @@
+/* ——————————————————————————————
+ * 紧凑布局（中等宽度 + 矮视口）
+ * —————————————————————————————— */
+
 @media (max-width: 720px),
 (max-height: 420px) {
     body {
@@ -6,7 +10,7 @@
     }
 
     .shell {
-        gap: 10px;
+        gap: 12px; /* M3 4dp 刻度 */
         align-content: start;
     }
 
@@ -25,49 +29,55 @@
     }
 
     .hero-title {
-        font-size: 1.45rem;
-        line-height: 1.2;
+        font-size: var(--mdui-typo-title-large-size, 22px);
+        font-weight: 700;
+        line-height: var(--mdui-typo-title-large-line-height, 28px);
     }
 
     .hero-description {
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: var(--mdui-typo-body-small-size, 12px);
+        font-weight: var(--mdui-typo-body-small-weight, 400);
+        line-height: var(--mdui-typo-body-small-line-height, 16px);
     }
 
     .feature-list {
-        border-radius: 18px;
+        border-radius: 16px; /* M3 Large */
     }
 
     .feature-item {
-        gap: 10px;
+        gap: 12px; /* M3 4dp 刻度 */
         padding: 12px 14px;
     }
 
     .feature-title strong {
-        font-size: 16px;
-        line-height: 1.2;
+        font-size: var(--mdui-typo-title-small-size, 14px);
+        font-weight: 700;
+        line-height: var(--mdui-typo-title-small-line-height, 20px);
     }
 
     .feature-title span {
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: var(--mdui-typo-body-small-size, 12px);
+        font-weight: var(--mdui-typo-body-small-weight, 400);
+        line-height: var(--mdui-typo-body-small-line-height, 16px);
     }
 
     .actions {
-        gap: 10px;
+        gap: 12px; /* M3 4dp 刻度 */
     }
 
     .actions mdui-button {
-        flex: 1 1 calc(50% - 5px);
+        flex: 1 1 calc(50% - 6px);
         min-width: 0;
     }
 
     .page-footer {
         padding-top: 0;
-        font-size: 11px;
-        line-height: 1.45;
+        font-size: var(--mdui-typo-body-small-size, 12px);
+        font-weight: var(--mdui-typo-body-small-weight, 400);
+        line-height: var(--mdui-typo-body-small-line-height, 16px);
     }
 
+    /* Dialog 小视口适配 */
     mdui-dialog {
         --mdui-shape-corner-extra-large: 18px;
     }
@@ -84,8 +94,9 @@
 
     mdui-dialog [slot="headline"] {
         margin: 0;
-        font-size: 17px;
-        line-height: 1.25;
+        font-size: var(--mdui-typo-title-small-size, 14px);
+        font-weight: var(--mdui-typo-title-small-weight, 500);
+        line-height: var(--mdui-typo-title-small-line-height, 20px);
         word-break: break-word;
     }
 
@@ -94,8 +105,9 @@
         max-height: none;
         overflow: visible;
         overflow-wrap: anywhere;
-        font-size: 13px;
-        line-height: 1.55;
+        font-size: var(--mdui-typo-body-small-size, 12px);
+        font-weight: var(--mdui-typo-body-small-weight, 400);
+        line-height: var(--mdui-typo-body-small-line-height, 16px);
         word-break: break-word;
     }
 
@@ -116,9 +128,13 @@
         flex: 0 0 auto;
         padding-top: 4px;
         padding-bottom: 6px;
-        gap: 6px;
+        gap: 8px; /* M3 4dp 刻度 */
     }
 }
+
+/* ——————————————————————————————
+ * 矮视口专项（横屏手机 / 小窗）
+ * —————————————————————————————— */
 
 @media (max-height: 420px) {
     body {
@@ -154,13 +170,16 @@
     }
 
     mdui-dialog [slot="headline"] {
-        font-size: 16px;
+        font-size: var(--mdui-typo-title-small-size, 14px);
+        font-weight: var(--mdui-typo-title-small-weight, 500);
+        line-height: var(--mdui-typo-title-small-line-height, 20px);
     }
 
     mdui-dialog [slot="description"] {
         max-height: none;
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: var(--mdui-typo-label-medium-size, 12px);
+        font-weight: var(--mdui-typo-label-medium-weight, 500);
+        line-height: var(--mdui-typo-label-medium-line-height, 16px);
         overflow: visible;
         scrollbar-gutter: auto;
     }
@@ -173,16 +192,22 @@
     }
 }
 
+/* ——————————————————————————————
+ * 极矮视口（< 260px 高）
+ * —————————————————————————————— */
+
 @media (max-height: 260px) {
     mdui-dialog [slot="headline"] {
-        font-size: 14px;
-        line-height: 1.15;
+        font-size: var(--mdui-typo-label-large-size, 14px);
+        font-weight: var(--mdui-typo-label-large-weight, 500);
+        line-height: var(--mdui-typo-label-large-line-height, 20px);
     }
 
     mdui-dialog [slot="description"] {
         max-height: none;
-        font-size: 11px;
-        line-height: 1.35;
+        font-size: var(--mdui-typo-label-small-size, 11px);
+        font-weight: var(--mdui-typo-label-small-weight, 500);
+        line-height: var(--mdui-typo-label-small-line-height, 16px);
         overflow: visible;
     }
 
@@ -196,6 +221,7 @@
     mdui-dialog::part(action) {
         padding-top: 0;
         padding-bottom: 0;
-        gap: 2px;
+        gap: 4px; /* M3 4dp 刻度 */
     }
 }
+

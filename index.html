@@ -5,11 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔚蓝咖啡厅 - 资源控制面板</title>
+
+    <!-- DNS 预解析 -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+
+    <!-- 预加载关键 CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="assets/css/control-panel.css" as="style">
+    <link rel="preload" href="assets/css/control-panel-responsive.css" as="style">
+
+    <!-- 字体与图标 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap">
+
+    <!-- MDUI v2 -->
     <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+
+    <!-- 项目样式 -->
     <link rel="stylesheet" href="assets/css/control-panel.css">
     <link rel="stylesheet" href="assets/css/control-panel-responsive.css">
 </head>
@@ -20,9 +35,9 @@
     </div>
     <div class="page-overlay" aria-hidden="true"></div>
     <div class="shell">
-        <section class="hero mdui-shadow-0">
+        <section class="hero mdui-shadow-0" aria-labelledby="hero-heading">
             <div class="hero-copy">
-                <div class="hero-heading">
+                <div class="hero-heading" id="hero-heading">
                     <div class="mdui-typo">
                         <h1 class="mdui-text-color-on-surface hero-title">蔚蓝咖啡厅控制面板</h1>
                         <p class="mdui-text-color-on-surface-variant hero-description">先查看各项状态，再按需切换开关并保存设置。</p>
@@ -30,47 +45,50 @@
                 </div>
             </div>
 
-            <div class="feature-list">
-                <div class="feature-item">
+            <div class="feature-list" role="list">
+                <!-- 游戏文本 -->
+                <div class="feature-item" role="listitem">
                     <div class="feature-title">
-                        <strong>游戏文本</strong>
-                        <span>控制文本汉化启用状态</span>
+                        <strong id="label-text">游戏文本</strong>
+                        <span id="desc-text">控制文本汉化启用状态</span>
                     </div>
                     <mdui-chip id="text-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
-                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="ui-icon status-icon-loading" aria-hidden="true"></span>
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-checkbox id="text-checkbox" aria-label="游戏文本"></mdui-checkbox>
+                    <mdui-checkbox id="text-checkbox" aria-labelledby="label-text" aria-describedby="desc-text"></mdui-checkbox>
                 </div>
 
-                <div class="feature-item">
+                <!-- 主线中配 -->
+                <div class="feature-item" role="listitem">
                     <div class="feature-title">
-                        <strong>主线中配</strong>
-                        <span>控制主线故事中文配音</span>
+                        <strong id="label-voice">主线中配</strong>
+                        <span id="desc-voice">控制主线故事中文配音</span>
                     </div>
                     <mdui-chip id="voice-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
-                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="ui-icon status-icon-loading" aria-hidden="true"></span>
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-checkbox id="voice-checkbox" aria-label="主线中配"></mdui-checkbox>
+                    <mdui-checkbox id="voice-checkbox" aria-labelledby="label-voice" aria-describedby="desc-voice"></mdui-checkbox>
                 </div>
 
-                <div class="feature-item">
+                <!-- 图像视频 -->
+                <div class="feature-item" role="listitem">
                     <div class="feature-title">
-                        <strong>图像视频</strong>
-                        <span>控制媒体资源汉化开关</span>
+                        <strong id="label-media">图像视频</strong>
+                        <span id="desc-media">控制媒体资源汉化开关</span>
                     </div>
                     <mdui-chip id="media-status" class="feature-status" variant="assist" elevated>
                         <span class="status-content">
-                            <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/status-loading.svg');-webkit-mask-image:url('assets/icons/status-loading.svg');"></span>
+                            <span class="ui-icon status-icon-loading" aria-hidden="true"></span>
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-checkbox id="media-checkbox" aria-label="图像视频"></mdui-checkbox>
+                    <mdui-checkbox id="media-checkbox" aria-labelledby="label-media" aria-describedby="desc-media"></mdui-checkbox>
                 </div>
             </div>
             <div id="status-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
@@ -103,12 +121,13 @@
             </mdui-button>
         </div>
 
-        <footer class="page-footer">
-            Copyright &copy; 2026 蔚蓝咖啡厅. All rights reserved.<br />
+        <footer class="page-footer" role="contentinfo">
+            Copyright &copy; 2026 蔚蓝咖啡厅. All rights reserved.<br>
             使用 MDUI 构建 | <span id="webui-version"></span> | Developer: roundRekt, KFACBT
         </footer>
     </div>
 
+    <!-- MDUI v2 JS -->
     <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
     <script src="./assets/js/control-panel.js"></script>
 </body>

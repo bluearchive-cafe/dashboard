@@ -17,6 +17,11 @@ const APP_CONFIG = {
     urls: {
         apiBase: "https://api.bluearchive.cafe",
         shareBase: "https://control.bluearchive.cafe"
+    },
+    fetch: {
+        timeout: 10000,
+        retries: 2,
+        retryDelayMs: 800
     }
 };
 const API_ENDPOINTS = {
@@ -32,10 +37,10 @@ mdui.setTheme("auto");
 mdui.setColorScheme("#1976D2");
 
 const statusStyles = {
-    loading: { text: "加载中", icon: APP_CONFIG.assets.icons.statusLoading },
-    ready: { text: "可用", icon: APP_CONFIG.assets.icons.statusReady },
-    waiting: { text: "待维护", icon: APP_CONFIG.assets.icons.statusUpdate },
-    failed: { text: "获取失败", icon: APP_CONFIG.assets.icons.statusError }
+    loading:  { text: "加载中",   css: "status-icon-loading" },
+    ready:    { text: "可用",     css: "status-icon-ready" },
+    waiting:  { text: "待维护",   css: "status-icon-waiting" },
+    failed:   { text: "获取失败", css: "status-icon-failed" }
 };
 const resourceVersions = {
     text: null,
@@ -44,7 +49,40 @@ const resourceVersions = {
 };
 const hasUid = typeof uid === "string" && uid.trim() !== "";
 
-/* 失败日志存储 */
+/* ——————————————————————————————
+ * 网络层：超时 + 重试
+ * —————————————————————————————— */
+
+const fetchWithTimeout = (url, options = {}, timeout = APP_CONFIG.fetch.timeout) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timer));
+};
+
+const fetchWithRetry = async (url, options = {}, {
+    timeout = APP_CONFIG.fetch.timeout,
+    retries = APP_CONFIG.fetch.retries,
+    retryDelayMs = APP_CONFIG.fetch.retryDelayMs
+} = {}) => {
+    let lastError;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            return await fetchWithTimeout(url, options, timeout);
+        } catch (err) {
+            lastError = err;
+            if (attempt < retries) {
+                await new Promise(r => setTimeout(r, retryDelayMs * (attempt + 1)));
+            }
+        }
+    }
+    throw lastError;
+};
+
+/* ——————————————————————————————
+ * 错误日志
+ * —————————————————————————————— */
+
 const errorLogs = {};
 
 const storeError = (id, { status, statusText, endpoint, body }) => {
@@ -57,18 +95,37 @@ const storeError = (id, { status, statusText, endpoint, body }) => {
     };
 };
 
+/* ——————————————————————————————
+ * UI 交互状态控制
+ * —————————————————————————————— */
+
+const INTERACTIVE_IDS = [
+    "text-checkbox", "voice-checkbox", "media-checkbox",
+    "save-button", "copy-button", "read-button", "diagnose-button"
+];
+
 const toggleInteractiveState = (disabled) => {
-    ["text-checkbox", "voice-checkbox", "media-checkbox", "save-button", "copy-button", "read-button", "diagnose-button"].forEach((id) => {
-        element(id).disabled = disabled;
+    INTERACTIVE_IDS.forEach((id) => {
+        const el = element(id);
+        if (el) el.disabled = disabled;
     });
 };
 
+/* ——————————————————————————————
+ * 状态展示（CSS class 驱动图标）
+ * —————————————————————————————— */
+
 const setStatus = (id, state) => {
     const chip = element(id);
+    if (!chip) return;
+
     const style = statusStyles[state];
     chip.querySelector(".status-label").textContent = style.text;
-    chip.querySelector(".ui-icon").style.maskImage = `url('${style.icon}')`;
-    chip.querySelector(".ui-icon").style.webkitMaskImage = `url('${style.icon}')`;
+
+    const icon = chip.querySelector(".ui-icon");
+    if (icon) {
+        icon.className = `ui-icon ${style.css}`;
+    }
 
     // 失败状态使用 M3 error 色
     chip.classList.toggle("status-error", state === "failed");
@@ -81,6 +138,10 @@ const setStatus = (id, state) => {
     }
 };
 
+/* ——————————————————————————————
+ * Dialog 弹窗
+ * —————————————————————————————— */
+
 const showTextDialog = ({
     headline,
     lines,
@@ -89,6 +150,7 @@ const showTextDialog = ({
     closeOnEsc = true
 }) => {
     const dialog = document.createElement("mdui-dialog");
+    dialog.setAttribute("aria-modal", "true");
 
     if (closeOnOverlayClick) {
         dialog.setAttribute("close-on-overlay-click", "");
@@ -131,6 +193,10 @@ const showTextDialog = ({
     dialog.open = true;
 };
 
+/* ——————————————————————————————
+ * 剪贴板
+ * —————————————————————————————— */
+
 const fallbackCopyText = (text) => {
     const textArea = document.createElement("textarea");
     textArea.value = text;
@@ -165,6 +231,10 @@ const copyText = async (text) => {
     return fallbackCopyText(text);
 };
 
+/* ——————————————————————————————
+ * 查看说明
+ * —————————————————————————————— */
+
 const showHelp = () => {
     showTextDialog({
         headline: "操作说明",
@@ -184,6 +254,10 @@ const showHelp = () => {
     });
 };
 
+/* ——————————————————————————————
+ * 诊断信息
+ * —————————————————————————————— */
+
 const getBrowserEngineVersion = () => {
     const { userAgent } = navigator;
     const edge = userAgent.match(/Edg\/([\d.]+)/);
@@ -201,14 +275,15 @@ const getBrowserEngineVersion = () => {
     return "无法识别";
 };
 
+const formatVersionLine = (label, versionInfo) => {
+    if (!versionInfo) return `${label}: 暂无数据`;
+    return `${label}:\n * 官方: ${versionInfo.official}\n * 汉化: ${versionInfo.localized}`;
+};
+
 const getDiagnosticsLines = () => {
     const { userAgent, appVersion, platform, language, languages, onLine, cookieEnabled, hardwareConcurrency, deviceMemory } = navigator;
     const viewport = `${window.innerWidth} x ${window.innerHeight}`;
     const screenSize = `${window.screen.width} x ${window.screen.height}`;
-    const formatVersionLine = (label, versionInfo) => {
-        if (!versionInfo) return `${label}: 暂无数据`;
-        return `${label}: \n * 官方: ${versionInfo.official} \n * 汉化: ${versionInfo.localized}`;
-    };
 
     return [
         `浏览器内核: ${getBrowserEngineVersion()}`,
@@ -230,8 +305,187 @@ const getDiagnosticsLines = () => {
     ];
 };
 
-element("read-button").addEventListener("click", showHelp);
-element("webui-version").textContent = webuiVersion;
+/* ——————————————————————————————
+ * 错误详情弹窗
+ * —————————————————————————————— */
+
+const RESOURCE_ERROR_NAMES = {
+    "text-status": "游戏文本",
+    "voice-status": "主线中配",
+    "media-status": "图像视频",
+    "config-get": "用户配置"
+};
+
+const showErrorLog = (chipId) => {
+    const chip = element(chipId);
+    if (!chip || !chip.classList.contains("status-error")) return;
+
+    const log = errorLogs[chipId];
+    const name = RESOURCE_ERROR_NAMES[chipId] || chipId;
+
+    if (!log) {
+        showTextDialog({
+            headline: `「${name}」错误详情`,
+            lines: ["暂无详细错误信息"],
+            actions: [{ text: "关闭", variant: "tonal", closeOnClick: true }]
+        });
+        return;
+    }
+
+    const detailLines = [
+        `接口: ${log.endpoint}`,
+        `状态码: ${log.status}`,
+        `错误信息: ${log.statusText}`,
+        `时间: ${log.timestamp}`,
+        `响应内容: ${log.body}`
+    ];
+
+    showTextDialog({
+        headline: `「${name}」获取失败`,
+        lines: detailLines,
+        actions: [
+            {
+                text: "复制详情",
+                variant: "tonal",
+                onClick: async () => {
+                    const copied = await copyText(detailLines.join("\n"));
+                    mdui.snackbar({
+                        message: copied ? "已复制到剪贴板" : "复制失败",
+                        closeable: true
+                    });
+                }
+            },
+            {
+                text: "关闭",
+                variant: "text",
+                closeOnClick: true
+            }
+        ]
+    });
+};
+
+/* ——————————————————————————————
+ * 保存设置（防抖 + POST + 重试）
+ * —————————————————————————————— */
+
+let savePending = false;
+
+element("save-button").addEventListener("click", async () => {
+    if (savePending) return;
+
+    if (!hasUid) {
+        showTextDialog({
+            headline: "无法保存",
+            lines: [
+                "当前链接缺少有效的 UID 参数",
+                "无法确认要保存到哪个账号",
+                "请通过正确的控制面板链接重新进入"
+            ],
+            closeOnOverlayClick: false,
+            closeOnEsc: false,
+            actions: [
+                {
+                    text: "关闭",
+                    variant: "tonal",
+                    closeOnClick: true
+                }
+            ]
+        });
+        return;
+    }
+
+    savePending = true;
+    const saveBtn = element("save-button");
+    saveBtn.loading = true;
+    toggleInteractiveState(true);
+
+    try {
+        const text = element("text-checkbox").checked ? "cn" : "jp";
+        const voice = element("voice-checkbox").checked ? "cn" : "jp";
+        const media = element("media-checkbox").checked ? "cn" : "jp";
+        const params = new URLSearchParams({ uid, text, voice, media });
+        const endpoint = `${API_ENDPOINTS.configSet}?${params}`;
+
+        const response = await fetchWithRetry(endpoint);
+
+        if (response.ok) {
+            mdui.snackbar({
+                message: "设置已保存，重启游戏后生效",
+                closeable: true
+            });
+        } else {
+            const responseBody = await response.text().catch(() => "无法读取响应体");
+            const errorLines = [
+                `接口: ${endpoint}`,
+                `状态码: ${response.status}`,
+                `错误信息: ${response.statusText}`,
+                `时间: ${new Date().toLocaleString("zh-CN")}`,
+                `响应内容: ${responseBody}`
+            ];
+            showTextDialog({
+                headline: "保存失败",
+                lines: errorLines,
+                actions: [
+                    {
+                        text: "复制详情",
+                        variant: "tonal",
+                        onClick: async () => {
+                            const copied = await copyText(errorLines.join("\n"));
+                            mdui.snackbar({
+                                message: copied ? "已复制到剪贴板" : "复制失败",
+                                closeable: true
+                            });
+                        }
+                    },
+                    {
+                        text: "关闭",
+                        variant: "text",
+                        closeOnClick: true
+                    }
+                ]
+            });
+        }
+    } catch (err) {
+        const errorLines = [
+            `接口: ${API_ENDPOINTS.configSet}`,
+            `状态码: N/A`,
+            `错误信息: ${err.name === "AbortError" ? "请求超时" : "请求异常"}`,
+            `时间: ${new Date().toLocaleString("zh-CN")}`,
+            `错误内容: ${err instanceof Error ? err.message : "未知错误"}`
+        ];
+        showTextDialog({
+            headline: "保存失败",
+            lines: errorLines,
+            actions: [
+                {
+                    text: "复制详情",
+                    variant: "tonal",
+                    onClick: async () => {
+                        const copied = await copyText(errorLines.join("\n"));
+                        mdui.snackbar({
+                            message: copied ? "已复制到剪贴板" : "复制失败",
+                            closeable: true
+                        });
+                    }
+                },
+                {
+                    text: "关闭",
+                    variant: "text",
+                    closeOnClick: true
+                }
+            ]
+        });
+    } finally {
+        saveBtn.loading = false;
+        toggleInteractiveState(false);
+        savePending = false;
+    }
+});
+
+/* ——————————————————————————————
+ * 复制链接
+ * —————————————————————————————— */
+
 element("copy-button").addEventListener("click", async () => {
     if (!hasUid) {
         showTextDialog({
@@ -281,6 +535,10 @@ element("copy-button").addEventListener("click", async () => {
     });
 });
 
+/* ——————————————————————————————
+ * 诊断信息
+ * —————————————————————————————— */
+
 element("diagnose-button").addEventListener("click", () => {
     const diagnosticsLines = getDiagnosticsLines();
     showTextDialog({
@@ -307,171 +565,24 @@ element("diagnose-button").addEventListener("click", () => {
     });
 });
 
-element("save-button").addEventListener("click", async () => {
-    if (!hasUid) {
-        showTextDialog({
-            headline: "无法保存",
-            lines: [
-                "当前链接缺少有效的 UID 参数",
-                "无法确认要保存到哪个账号",
-                "请通过正确的控制面板链接重新进入"
-            ],
-            closeOnOverlayClick: false,
-            closeOnEsc: false,
-            actions: [
-                {
-                    text: "关闭",
-                    variant: "tonal",
-                    closeOnClick: true
-                }
-            ]
-        });
-        return;
-    }
+/* ——————————————————————————————
+ * 查看说明 & 状态 chip 点击
+ * —————————————————————————————— */
 
-    const saveBtn = element("save-button");
-    saveBtn.loading = true;
-    toggleInteractiveState(true);
+element("read-button").addEventListener("click", showHelp);
+element("webui-version").textContent = webuiVersion;
 
-    try {
-        const text = element("text-checkbox").checked ? "cn" : "jp";
-        const voice = element("voice-checkbox").checked ? "cn" : "jp";
-        const media = element("media-checkbox").checked ? "cn" : "jp";
-        const params = new URLSearchParams({ uid, text, voice, media });
-        const endpoint = `${API_ENDPOINTS.configSet}?${params}`;
-        const response = await fetch(endpoint);
-
-        if (response.ok) {
-            mdui.snackbar({
-                message: "设置已保存，重启游戏后生效",
-                closeable: true
-            });
-        } else {
-            const body = await response.text().catch(() => "无法读取响应体");
-            const errorLines = [
-                `接口: ${endpoint}`,
-                `状态码: ${response.status}`,
-                `错误信息: ${response.statusText}`,
-                `时间: ${new Date().toLocaleString("zh-CN")}`,
-                `响应内容: ${body}`
-            ];
-            showTextDialog({
-                headline: "保存失败",
-                lines: errorLines,
-                actions: [
-                    {
-                        text: "复制详情",
-                        variant: "tonal",
-                        onClick: async () => {
-                            const copied = await copyText(errorLines.join("\n"));
-                            mdui.snackbar({
-                                message: copied ? "已复制到剪贴板" : "复制失败",
-                                closeable: true
-                            });
-                        }
-                    },
-                    {
-                        text: "关闭",
-                        variant: "text",
-                        closeOnClick: true
-                    }
-                ]
-            });
-        }
-    } catch (err) {
-        const errorLines = [
-            `接口: ${API_ENDPOINTS.configSet}`,
-            `状态码: N/A`,
-            `错误信息: 请求异常`,
-            `时间: ${new Date().toLocaleString("zh-CN")}`,
-            `错误内容: ${err instanceof Error ? err.message : "未知错误"}`
-        ];
-        showTextDialog({
-            headline: "保存失败",
-            lines: errorLines,
-            actions: [
-                {
-                    text: "复制详情",
-                    variant: "tonal",
-                    onClick: async () => {
-                        const copied = await copyText(errorLines.join("\n"));
-                        mdui.snackbar({
-                            message: copied ? "已复制到剪贴板" : "复制失败",
-                            closeable: true
-                        });
-                    }
-                },
-                {
-                    text: "关闭",
-                    variant: "text",
-                    closeOnClick: true
-                }
-            ]
-        });
-    } finally {
-        saveBtn.loading = false;
-        toggleInteractiveState(false);
-    }
-});
-
-/* 显示失败日志弹窗 */
-const showErrorLog = (chipId) => {
-    const chip = element(chipId);
-    if (!chip || !chip.classList.contains("status-error")) return;
-
-    const log = errorLogs[chipId];
-    const resourceNames = {
-        "text-status": "游戏文本",
-        "voice-status": "主线中配",
-        "media-status": "图像视频"
-    };
-    const name = resourceNames[chipId] || chipId;
-
-    if (!log) {
-        showTextDialog({
-            headline: `「${name}」错误详情`,
-            lines: ["暂无详细错误信息"],
-            actions: [{ text: "关闭", variant: "tonal", closeOnClick: true }]
-        });
-        return;
-    }
-
-    const detailLines = [
-        `接口: ${log.endpoint}`,
-        `状态码: ${log.status}`,
-        `错误信息: ${log.statusText}`,
-        `时间: ${log.timestamp}`,
-        `响应内容: ${log.body}`
-    ];
-
-    showTextDialog({
-        headline: `「${name}」获取失败`,
-        lines: detailLines,
-        actions: [
-            {
-                text: "复制详情",
-                variant: "tonal",
-                onClick: async () => {
-                    const copied = await copyText(detailLines.join("\n"));
-                    mdui.snackbar({
-                        message: copied ? "已复制到剪贴板" : "复制失败",
-                        closeable: true
-                    });
-                }
-            },
-            {
-                text: "关闭",
-                variant: "text",
-                closeOnClick: true
-            }
-        ]
-    });
-};
-
-/* 点击状态 chip 查看失败日志 */
 ["text-status", "voice-status", "media-status"].forEach((id) => {
-    element(id).addEventListener("click", () => showErrorLog(id));
+    const chip = element(id);
+    if (chip) {
+        chip.setAttribute("role", "status");
+        chip.addEventListener("click", () => showErrorLog(id));
+    }
 });
+
+/* ——————————————————————————————
+ * 初始化
+ * —————————————————————————————— */
 
 const init = async () => {
     if (!hasUid) {
@@ -499,66 +610,105 @@ const init = async () => {
         return;
     }
 
-    const [statusRes, configRes] = await Promise.all([
-        fetch(API_ENDPOINTS.statusList),
-        fetch(`${API_ENDPOINTS.configGet}?uid=${uid}`)
-    ]);
+    let statusOk = false;
+    let configOk = false;
 
-    if (statusRes.ok) {
-        const status = await statusRes.json();
-        resourceVersions.text = {
-            official: status.text.official.version,
-            localized: status.text.localized.version
-        };
-        resourceVersions.voice = {
-            official: status.voice.official.version,
-            localized: status.voice.localized.version
-        };
-        resourceVersions.media = {
-            official: status.media.official.version,
-            localized: status.media.localized.version
-        };
-        const textSynced = status.text.official.version === status.text.localized.version;
-        const voiceSynced = status.voice.official.version === status.voice.localized.version;
-        const mediaSynced = status.media.official.version === status.media.localized.version;
-        setStatus("text-status", textSynced ? "ready" : "waiting");
-        setStatus("voice-status", voiceSynced ? "ready" : "waiting");
-        setStatus("media-status", mediaSynced ? "ready" : "waiting");
-    } else {
-        const errorBody = await statusRes.text().catch(() => "无法读取响应体");
+    try {
+        const [statusRes, configRes] = await Promise.all([
+            fetchWithRetry(API_ENDPOINTS.statusList),
+            fetchWithRetry(`${API_ENDPOINTS.configGet}?uid=${uid}`)
+        ]);
+
+        /* —— 处理 status 接口 —— */
+        if (statusRes.ok) {
+            statusOk = true;
+            const status = await statusRes.json();
+            resourceVersions.text = {
+                official: status.text.official.version,
+                localized: status.text.localized.version
+            };
+            resourceVersions.voice = {
+                official: status.voice.official.version,
+                localized: status.voice.localized.version
+            };
+            resourceVersions.media = {
+                official: status.media.official.version,
+                localized: status.media.localized.version
+            };
+            const textSynced = status.text.official.version === status.text.localized.version;
+            const voiceSynced = status.voice.official.version === status.voice.localized.version;
+            const mediaSynced = status.media.official.version === status.media.localized.version;
+            setStatus("text-status", textSynced ? "ready" : "waiting");
+            setStatus("voice-status", voiceSynced ? "ready" : "waiting");
+            setStatus("media-status", mediaSynced ? "ready" : "waiting");
+        } else {
+            const errorBody = await statusRes.text().catch(() => "无法读取响应体");
+            const errorInfo = {
+                status: statusRes.status,
+                statusText: statusRes.statusText,
+                endpoint: API_ENDPOINTS.statusList,
+                body: errorBody
+            };
+            storeError("text-status", errorInfo);
+            storeError("voice-status", errorInfo);
+            storeError("media-status", errorInfo);
+            setStatus("text-status", "failed");
+            setStatus("voice-status", "failed");
+            setStatus("media-status", "failed");
+        }
+
+        /* —— 处理 config 接口 —— */
+        if (configRes.ok) {
+            configOk = true;
+            const { text, voice, media } = await configRes.json();
+            element("text-checkbox").checked = text === "cn";
+            element("voice-checkbox").checked = voice === "cn";
+            element("media-checkbox").checked = media === "cn";
+        } else {
+            const errorBody = await configRes.text().catch(() => "无法读取响应体");
+            storeError("config-get", {
+                status: configRes.status,
+                statusText: configRes.statusText,
+                endpoint: `${API_ENDPOINTS.configGet}?uid=${uid}`,
+                body: errorBody
+            });
+            // 通知用户配置读取失败但不阻断使用
+            mdui.snackbar({
+                message: "用户配置读取失败，当前开关状态可能不准确",
+                closeable: true,
+                timeout: 5000
+            });
+        }
+
+        /* —— 部分失败时的汇总提示 —— */
+        if (!statusOk && !configOk) {
+            mdui.snackbar({
+                message: "网络异常，无法读取任何数据。请检查连接后刷新页面",
+                closeable: true,
+                timeout: 6000
+            });
+        }
+    } catch (err) {
+        // 整体异常（如网络完全不可达）
         const errorInfo = {
-            status: statusRes.status,
-            statusText: statusRes.statusText,
+            status: "N/A",
+            statusText: err.name === "AbortError" ? "请求超时" : "请求异常",
             endpoint: API_ENDPOINTS.statusList,
-            body: errorBody
+            body: err instanceof Error ? err.message : "未知错误"
         };
         storeError("text-status", errorInfo);
         storeError("voice-status", errorInfo);
         storeError("media-status", errorInfo);
+        storeError("config-get", { ...errorInfo, endpoint: `${API_ENDPOINTS.configGet}?uid=${uid}` });
         setStatus("text-status", "failed");
         setStatus("voice-status", "failed");
         setStatus("media-status", "failed");
-    }
-
-    if (configRes.ok) {
-        const { text, voice, media } = await configRes.json();
-        element("text-checkbox").checked = text === "cn";
-        element("voice-checkbox").checked = voice === "cn";
-        element("media-checkbox").checked = media === "cn";
+        mdui.snackbar({
+            message: "网络异常，无法读取数据。请检查连接后刷新页面",
+            closeable: true,
+            timeout: 6000
+        });
     }
 };
 
-init().catch((err) => {
-    const errorInfo = {
-        status: "N/A",
-        statusText: "请求异常",
-        endpoint: API_ENDPOINTS.statusList,
-        body: err instanceof Error ? err.message : "未知错误"
-    };
-    storeError("text-status", errorInfo);
-    storeError("voice-status", errorInfo);
-    storeError("media-status", errorInfo);
-    setStatus("text-status", "failed");
-    setStatus("voice-status", "failed");
-    setStatus("media-status", "failed");
-});
+init();
