@@ -660,44 +660,13 @@ const init = async () => {
             element("voice-checkbox").checked = voice === "cn";
             element("media-checkbox").checked = media === "cn";
         } else {
+            // 无已有配置并非错误（新用户 / 从未保存过），使用默认值即可
             const errorBody = await configRes.text().catch(() => "无法读取响应体");
-            const statusCode = configRes.status;
             storeError("config-get", {
-                status: statusCode,
+                status: configRes.status,
                 statusText: configRes.statusText,
                 endpoint: `${API_ENDPOINTS.configGet}?uid=${uid}`,
                 body: errorBody
-            });
-
-            toggleInteractiveState(true);
-            setStatus("text-status", "failed");
-            setStatus("voice-status", "failed");
-            setStatus("media-status", "failed");
-
-            const isInvalidUid = statusCode === 400 || statusCode === 404;
-            showTextDialog({
-                headline: "无法读取配置",
-                lines: isInvalidUid
-                    ? [
-                        "当前 UID 无效或账号不存在",
-                        "暂时无法读取或保存资源开关配置",
-                        "请从游戏内公告 → 异常通知 → UID 获取正确的 UID"
-                    ]
-                    : [
-                        "用户配置读取失败，当前开关状态未知",
-                        "暂时无法确认您的资源开关设置",
-                        "请检查网络连接后刷新页面重试",
-                        "如问题持续，请使用诊断信息排查"
-                    ],
-                closeOnOverlayClick: false,
-                closeOnEsc: false,
-                actions: [
-                    {
-                        text: "知道了",
-                        variant: "tonal",
-                        closeOnClick: true
-                    }
-                ]
             });
         }
 
