@@ -1,7 +1,6 @@
 const element = (id) => document.getElementById(id);
 const uid = new URLSearchParams(location.search).get("uid");
 const webuiVersion = "WebUI v1.1.7 Beta - URL fix";
-const UI_COMPAT_STORAGE_KEY = "bluearchivecafe-webui-compat-enabled";
 const APP_CONFIG = {
     assets: {
         icons: {
@@ -44,34 +43,18 @@ const resourceVersions = {
     media: null
 };
 const hasUid = typeof uid === "string" && uid.trim() !== "";
-const compatButtonLabel = element("compat-button-label");
 
-const isUiCompatEnabled = () => document.body.classList.contains("ui-compat-enabled");
+/* 失败日志存储 */
+const errorLogs = {};
 
-const updateCompatButton = () => {
-    const enabled = isUiCompatEnabled();
-    compatButtonLabel.textContent = enabled ? "退出 UI 兼容布局" : "启用 UI 兼容布局";
-    element("compat-button").variant = enabled ? "tonal" : "outlined";
-    element("compat-button").setAttribute("aria-pressed", String(enabled));
-};
-
-const setUiCompatEnabled = (enabled) => {
-    document.body.classList.toggle("ui-compat-enabled", enabled);
-    updateCompatButton();
-
-    try {
-        localStorage.setItem(UI_COMPAT_STORAGE_KEY, enabled ? "1" : "0");
-    } catch {
-        // Ignore storage failures and keep the current session state.
-    }
-};
-
-const initUiCompatPreference = () => {
-    try {
-        setUiCompatEnabled(localStorage.getItem(UI_COMPAT_STORAGE_KEY) === "1");
-    } catch {
-        updateCompatButton();
-    }
+const storeError = (id, { status, statusText, endpoint, body }) => {
+    errorLogs[id] = {
+        status,
+        statusText: statusText || "未知",
+        body: body || "无",
+        endpoint,
+        timestamp: new Date().toLocaleString("zh-CN")
+    };
 };
 
 const toggleInteractiveState = (disabled) => {
@@ -86,6 +69,16 @@ const setStatus = (id, state) => {
     chip.querySelector(".status-label").textContent = style.text;
     chip.querySelector(".ui-icon").style.maskImage = `url('${style.icon}')`;
     chip.querySelector(".ui-icon").style.webkitMaskImage = `url('${style.icon}')`;
+
+    // 失败状态使用 M3 error 色
+    chip.classList.toggle("status-error", state === "failed");
+
+    // 通知读屏软件状态变化
+    const announcer = element("status-announcer");
+    if (announcer) {
+        const featureName = chip.closest(".feature-item")?.querySelector("strong")?.textContent || id;
+        announcer.textContent = `${featureName}: ${style.text}`;
+    }
 };
 
 const showTextDialog = ({
@@ -229,7 +222,6 @@ const getDiagnosticsLines = () => {
         `视口尺寸: ${viewport}`,
         `屏幕尺寸: ${screenSize}`,
         `设备像素比: ${window.devicePixelRatio || 1}`,
-        `UI 兼容模式: ${isUiCompatEnabled() ? "已启用" : "未启用"}`,
         `控制面板 UID: ${hasUid ? uid : "未提供"}`,
         `当前地址: ${location.href}`,
         formatVersionLine("文本资源版本", resourceVersions.text),
@@ -240,15 +232,6 @@ const getDiagnosticsLines = () => {
 
 element("read-button").addEventListener("click", showHelp);
 element("webui-version").textContent = webuiVersion;
-element("compat-button").addEventListener("click", () => {
-    const nextEnabled = !isUiCompatEnabled();
-    setUiCompatEnabled(nextEnabled);
-    mdui.snackbar({
-        message: nextEnabled ? "已启用移动端优化布局" : "已恢复默认布局",
-        closeable: true
-    });
-});
-
 element("copy-button").addEventListener("click", async () => {
     if (!hasUid) {
         showTextDialog({
@@ -306,7 +289,7 @@ element("diagnose-button").addEventListener("click", () => {
         actions: [
             {
                 text: "复制",
-                variant: "text",
+                variant: "tonal",
                 onClick: async () => {
                     const copied = await copyText(diagnosticsLines.join("\n"));
                     mdui.snackbar({
@@ -346,23 +329,148 @@ element("save-button").addEventListener("click", async () => {
         return;
     }
 
-    const text = element("text-checkbox").checked ? "cn" : "jp";
-    const voice = element("voice-checkbox").checked ? "cn" : "jp";
-    const media = element("media-checkbox").checked ? "cn" : "jp";
-    const params = new URLSearchParams({ uid, text, voice, media });
-    const response = await fetch(`${API_ENDPOINTS.configSet}?${params}`);
+    const saveBtn = element("save-button");
+    saveBtn.loading = true;
+    toggleInteractiveState(true);
 
-    if (response.ok) {
-        mdui.snackbar({
-            message: "设置已保存，重启游戏后生效",
-            closeable: true
+    try {
+        const text = element("text-checkbox").checked ? "cn" : "jp";
+        const voice = element("voice-checkbox").checked ? "cn" : "jp";
+        const media = element("media-checkbox").checked ? "cn" : "jp";
+        const params = new URLSearchParams({ uid, text, voice, media });
+        const endpoint = `${API_ENDPOINTS.configSet}?${params}`;
+        const response = await fetch(endpoint);
+
+        if (response.ok) {
+            mdui.snackbar({
+                message: "设置已保存，重启游戏后生效",
+                closeable: true
+            });
+        } else {
+            const body = await response.text().catch(() => "无法读取响应体");
+            const errorLines = [
+                `接口: ${endpoint}`,
+                `状态码: ${response.status}`,
+                `错误信息: ${response.statusText}`,
+                `时间: ${new Date().toLocaleString("zh-CN")}`,
+                `响应内容: ${body}`
+            ];
+            showTextDialog({
+                headline: "保存失败",
+                lines: errorLines,
+                actions: [
+                    {
+                        text: "复制详情",
+                        variant: "tonal",
+                        onClick: async () => {
+                            const copied = await copyText(errorLines.join("\n"));
+                            mdui.snackbar({
+                                message: copied ? "已复制到剪贴板" : "复制失败",
+                                closeable: true
+                            });
+                        }
+                    },
+                    {
+                        text: "关闭",
+                        variant: "text",
+                        closeOnClick: true
+                    }
+                ]
+            });
+        }
+    } catch (err) {
+        const errorLines = [
+            `接口: ${API_ENDPOINTS.configSet}`,
+            `状态码: N/A`,
+            `错误信息: 请求异常`,
+            `时间: ${new Date().toLocaleString("zh-CN")}`,
+            `错误内容: ${err instanceof Error ? err.message : "未知错误"}`
+        ];
+        showTextDialog({
+            headline: "保存失败",
+            lines: errorLines,
+            actions: [
+                {
+                    text: "复制详情",
+                    variant: "tonal",
+                    onClick: async () => {
+                        const copied = await copyText(errorLines.join("\n"));
+                        mdui.snackbar({
+                            message: copied ? "已复制到剪贴板" : "复制失败",
+                            closeable: true
+                        });
+                    }
+                },
+                {
+                    text: "关闭",
+                    variant: "text",
+                    closeOnClick: true
+                }
+            ]
         });
-    } else {
-        mdui.snackbar({
-            message: "保存失败，请稍后重试",
-            closeable: true
-        });
+    } finally {
+        saveBtn.loading = false;
+        toggleInteractiveState(false);
     }
+});
+
+/* 显示失败日志弹窗 */
+const showErrorLog = (chipId) => {
+    const chip = element(chipId);
+    if (!chip || !chip.classList.contains("status-error")) return;
+
+    const log = errorLogs[chipId];
+    const resourceNames = {
+        "text-status": "游戏文本",
+        "voice-status": "主线中配",
+        "media-status": "图像视频"
+    };
+    const name = resourceNames[chipId] || chipId;
+
+    if (!log) {
+        showTextDialog({
+            headline: `「${name}」错误详情`,
+            lines: ["暂无详细错误信息"],
+            actions: [{ text: "关闭", variant: "tonal", closeOnClick: true }]
+        });
+        return;
+    }
+
+    const detailLines = [
+        `接口: ${log.endpoint}`,
+        `状态码: ${log.status}`,
+        `错误信息: ${log.statusText}`,
+        `时间: ${log.timestamp}`,
+        `响应内容: ${log.body}`
+    ];
+
+    showTextDialog({
+        headline: `「${name}」获取失败`,
+        lines: detailLines,
+        actions: [
+            {
+                text: "复制详情",
+                variant: "tonal",
+                onClick: async () => {
+                    const copied = await copyText(detailLines.join("\n"));
+                    mdui.snackbar({
+                        message: copied ? "已复制到剪贴板" : "复制失败",
+                        closeable: true
+                    });
+                }
+            },
+            {
+                text: "关闭",
+                variant: "text",
+                closeOnClick: true
+            }
+        ]
+    });
+};
+
+/* 点击状态 chip 查看失败日志 */
+["text-status", "voice-status", "media-status"].forEach((id) => {
+    element(id).addEventListener("click", () => showErrorLog(id));
 });
 
 const init = async () => {
@@ -417,6 +525,16 @@ const init = async () => {
         setStatus("voice-status", voiceSynced ? "ready" : "waiting");
         setStatus("media-status", mediaSynced ? "ready" : "waiting");
     } else {
+        const errorBody = await statusRes.text().catch(() => "无法读取响应体");
+        const errorInfo = {
+            status: statusRes.status,
+            statusText: statusRes.statusText,
+            endpoint: API_ENDPOINTS.statusList,
+            body: errorBody
+        };
+        storeError("text-status", errorInfo);
+        storeError("voice-status", errorInfo);
+        storeError("media-status", errorInfo);
         setStatus("text-status", "failed");
         setStatus("voice-status", "failed");
         setStatus("media-status", "failed");
@@ -430,8 +548,16 @@ const init = async () => {
     }
 };
 
-initUiCompatPreference();
-init().catch(() => {
+init().catch((err) => {
+    const errorInfo = {
+        status: "N/A",
+        statusText: "请求异常",
+        endpoint: API_ENDPOINTS.statusList,
+        body: err instanceof Error ? err.message : "未知错误"
+    };
+    storeError("text-status", errorInfo);
+    storeError("voice-status", errorInfo);
+    storeError("media-status", errorInfo);
     setStatus("text-status", "failed");
     setStatus("voice-status", "failed");
     setStatus("media-status", "failed");

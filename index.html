@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
     <link rel="stylesheet" href="assets/css/control-panel.css">
     <link rel="stylesheet" href="assets/css/control-panel-responsive.css">
-    <link rel="stylesheet" href="assets/css/control-panel-uicompat.css">
 </head>
 
 <body>
@@ -43,7 +42,7 @@
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-switch id="text-checkbox"></mdui-switch>
+                    <mdui-checkbox id="text-checkbox" aria-label="游戏文本"></mdui-checkbox>
                 </div>
 
                 <div class="feature-item">
@@ -57,7 +56,7 @@
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-switch id="voice-checkbox"></mdui-switch>
+                    <mdui-checkbox id="voice-checkbox" aria-label="主线中配"></mdui-checkbox>
                 </div>
 
                 <div class="feature-item">
@@ -71,9 +70,10 @@
                             <span class="status-label">加载中</span>
                         </span>
                     </mdui-chip>
-                    <mdui-switch id="media-checkbox"></mdui-switch>
+                    <mdui-checkbox id="media-checkbox" aria-label="图像视频"></mdui-checkbox>
                 </div>
             </div>
+            <div id="status-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
         </section>
 
         <div class="actions">
@@ -99,12 +99,6 @@
                 <span class="action-content">
                     <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-diagnose.svg');-webkit-mask-image:url('assets/icons/action-diagnose.svg');"></span>
                     <span>诊断信息</span>
-                </span>
-            </mdui-button>
-            <mdui-button id="compat-button" variant="outlined">
-                <span class="action-content">
-                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-uicompat.svg');-webkit-mask-image:url('assets/icons/action-uicompat.svg');"></span>
-                    <span id="compat-button-label">UI 兼容布局</span>
                 </span>
             </mdui-button>
         </div>
