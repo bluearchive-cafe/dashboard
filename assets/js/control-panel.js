@@ -379,7 +379,7 @@ element("save-button").addEventListener("click", async () => {
             lines: [
                 "当前链接缺少有效的 UID 参数",
                 "无法确认要保存到哪个账号",
-                "请通过正确的控制面板链接重新进入"
+                "请从游戏内公告 → 活动 → 控制面板进入，通过完整链接重新打开页面"
             ],
             closeOnOverlayClick: false,
             closeOnEsc: false,
@@ -493,7 +493,7 @@ element("copy-button").addEventListener("click", async () => {
             lines: [
                 "当前链接缺少有效的 UID 参数",
                 "暂时无法生成分享链接",
-                "请使用包含 uid 的完整地址重新打开页面"
+                "请从游戏内公告 → 活动 → 控制面板进入，通过完整链接重新打开页面"
             ],
             closeOnOverlayClick: false,
             closeOnEsc: false,
@@ -595,7 +595,7 @@ const init = async () => {
             lines: [
                 "当前页面缺少必要的 UID 参数",
                 "暂时无法读取或保存资源开关配置",
-                "请从有效的控制面板链接重新打开页面"
+                "请从游戏内公告 → 活动 → 控制面板进入，通过完整链接重新打开页面"
             ],
             closeOnOverlayClick: false,
             closeOnEsc: false,
@@ -610,9 +610,6 @@ const init = async () => {
         return;
     }
 
-    let statusOk = false;
-    let configOk = false;
-
     try {
         const [statusRes, configRes] = await Promise.all([
             fetchWithRetry(API_ENDPOINTS.statusList),
@@ -621,7 +618,6 @@ const init = async () => {
 
         /* —— 处理 status 接口 —— */
         if (statusRes.ok) {
-            statusOk = true;
             const status = await statusRes.json();
             resourceVersions.text = {
                 official: status.text.official.version,
@@ -659,35 +655,52 @@ const init = async () => {
 
         /* —— 处理 config 接口 —— */
         if (configRes.ok) {
-            configOk = true;
             const { text, voice, media } = await configRes.json();
             element("text-checkbox").checked = text === "cn";
             element("voice-checkbox").checked = voice === "cn";
             element("media-checkbox").checked = media === "cn";
         } else {
             const errorBody = await configRes.text().catch(() => "无法读取响应体");
+            const statusCode = configRes.status;
             storeError("config-get", {
-                status: configRes.status,
+                status: statusCode,
                 statusText: configRes.statusText,
                 endpoint: `${API_ENDPOINTS.configGet}?uid=${uid}`,
                 body: errorBody
             });
-            // 通知用户配置读取失败但不阻断使用
-            mdui.snackbar({
-                message: "用户配置读取失败，当前开关状态可能不准确",
-                closeable: true,
-                timeout: 5000
+
+            toggleInteractiveState(true);
+            setStatus("text-status", "failed");
+            setStatus("voice-status", "failed");
+            setStatus("media-status", "failed");
+
+            const isInvalidUid = statusCode === 400 || statusCode === 404;
+            showTextDialog({
+                headline: "无法读取配置",
+                lines: isInvalidUid
+                    ? [
+                        "当前 UID 无效或账号不存在",
+                        "暂时无法读取或保存资源开关配置",
+                        "请从游戏内公告 → 异常通知 → UID 获取正确的 UID"
+                    ]
+                    : [
+                        "用户配置读取失败，当前开关状态未知",
+                        "暂时无法确认您的资源开关设置",
+                        "请检查网络连接后刷新页面重试",
+                        "如问题持续，请使用诊断信息排查"
+                    ],
+                closeOnOverlayClick: false,
+                closeOnEsc: false,
+                actions: [
+                    {
+                        text: "知道了",
+                        variant: "tonal",
+                        closeOnClick: true
+                    }
+                ]
             });
         }
 
-        /* —— 部分失败时的汇总提示 —— */
-        if (!statusOk && !configOk) {
-            mdui.snackbar({
-                message: "网络异常，无法读取任何数据。请检查连接后刷新页面",
-                closeable: true,
-                timeout: 6000
-            });
-        }
     } catch (err) {
         // 整体异常（如网络完全不可达）
         const errorInfo = {
