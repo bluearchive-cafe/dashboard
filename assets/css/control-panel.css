@@ -139,12 +139,13 @@ body {
 }
 
 .feature-title strong {
-    font-size: 18px;
+    font-size: var(--mdui-typescale-title-medium-size, 18px);
+    font-weight: var(--mdui-typescale-title-medium-weight, 700);
 }
 
 .feature-title span {
     color: var(--feature-title-muted);
-    font-size: 13px;
+    font-size: var(--mdui-typescale-body-small-size, 13px);
 }
 
 .feature-status {
@@ -164,7 +165,7 @@ body {
 .page-footer {
     justify-self: center;
     padding: 2px 12px 0;
-    font-size: 12px;
+    font-size: var(--mdui-typescale-label-medium-size, 12px);
     line-height: 1.6;
     color: var(--footer-color);
     text-align: center;

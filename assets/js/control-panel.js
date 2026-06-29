@@ -1,6 +1,6 @@
 const element = (id) => document.getElementById(id);
 const uid = new URLSearchParams(location.search).get("uid");
-const webuiVersion = "WebUI v1.1.7 Beta - URL fix";
+const webuiVersion = "WebUI v1.2.0";
 const APP_CONFIG = {
     assets: {
         icons: {
@@ -58,7 +58,7 @@ const storeError = (id, { status, statusText, endpoint, body }) => {
 };
 
 const toggleInteractiveState = (disabled) => {
-    ["text-checkbox", "voice-checkbox", "media-checkbox", "save-button", "copy-button"].forEach((id) => {
+    ["text-checkbox", "voice-checkbox", "media-checkbox", "save-button", "copy-button", "read-button", "diagnose-button"].forEach((id) => {
         element(id).disabled = disabled;
     });
 };
