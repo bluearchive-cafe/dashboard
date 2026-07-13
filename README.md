@@ -17,36 +17,36 @@
 
 ## 如何打开
 
-推荐使用主页面：
-
-- `index.html`
-
-如果你拿到的是一个完整链接，直接在浏览器中打开即可，比如：
+线上入口使用路径填写 UID：
 
 ```text
-https://dash.bluearchive.cafe/?uid=
+https://dash.bluearchive.cafe/XXXXXXXX
 ```
 
-`?uid=` 后方填入你在游戏内获得的 UID 即可使用。
+将 `XXXXXXXX` 替换为游戏内获得的八位大写字母 UID。
 
-如果你是本地打开页面，请尽量使用带有 `uid` 参数的地址，例如：
+旧版 `dash.bluearchive.cafe?uid=XXXXXXXX`、`control.bluearchive.cafe?uid=XXXXXXXX` 和 `control.bluearchive.cafe/XXXXXXXX` 链接会自动迁移到上述路径格式。
+
+本地预览时，可以启动静态 HTTP 服务器：
 
 ```text
-index.html?uid=XXXXXXXX
+python -m http.server 8080
 ```
 
-或：
+然后使用兼容静态服务器的查询参数入口：
 
 ```text
 http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 ```
+
+`python -m http.server` 不支持直接刷新 SPA 路径。直接打开 `/XXXXXXXX` 或在该路径刷新必须在 ESA Pages 预览环境验证。
 
 ## 使用前请注意
 
 - 页面依赖网络连接才能正常使用
 - 页面会访问远程接口读取和保存配置
 - 页面样式依赖在线资源，网络受限时可能显示异常
-- 如果没有提供有效的 `uid`，页面无法读取配置，也无法保存设置
+- 如果没有提供有效的 UID，页面无法读取配置，也无法保存设置
 
 ## 页面怎么用
 
@@ -100,10 +100,10 @@ http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 链接一般类似：
 
 ```text
-https://dash.bluearchive.cafe/?uid=XXXXXXXX
+https://dash.bluearchive.cafe/XXXXXXXX
 ```
 
-只有当前页面带有有效 `uid` 参数时，才能正确生成可分享链接。
+只有当前页面包含有效 UID 时，才能正确生成可分享链接。
 
 ### 6. 点击“诊断信息”
 
@@ -121,13 +121,15 @@ https://dash.bluearchive.cafe/?uid=XXXXXXXX
 
 ### 页面提示“链接无效”
 
-这通常表示当前页面地址中缺少 `uid` 参数，或 `uid` 参数无效。
+这表示当前页面地址中缺少 UID。
 
-请检查链接中是否包含类似：
+请检查链接是否使用以下路径格式：
 
 ```text
-?uid=XXXXXXXX
+https://dash.bluearchive.cafe/XXXXXXXX
 ```
+
+如果页面提示“UID 格式无效”，请确认 UID 严格由八位大写字母组成。
 
 ### 状态一直显示获取失败
 
@@ -141,7 +143,7 @@ https://dash.bluearchive.cafe/?uid=XXXXXXXX
 
 常见原因：
 
-- 当前页面没有有效 `uid`
+- 当前页面没有有效 UID
 - 浏览器限制了剪贴板写入权限
 - 当前运行环境对 `file://` 页面支持较差
 
@@ -151,7 +153,7 @@ https://dash.bluearchive.cafe/?uid=XXXXXXXX
 
 - 当前网络异常
 - 接口服务暂时不可用
-- 当前链接中的 `uid` 无效
+- 当前链接中的 UID 无效
 
 ## 给普通用户的建议
 
@@ -160,10 +162,13 @@ https://dash.bluearchive.cafe/?uid=XXXXXXXX
 - 保存成功后，按页面提示重启游戏再确认效果
 - 如果遇到异常，优先查看“诊断信息”并保留当前链接
 
-## 补充说明
+## 开发验证
 
-- `index.html` 是当前主页面
-- `index_nomobilefix.html` 是旧版本页面，一般用户不需要使用
+使用 Node.js 内置测试运行全部测试：
+
+```text
+node --test
+```
 
 ## License
 

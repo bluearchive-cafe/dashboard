@@ -1,5 +1,15 @@
+(() => {
+const uidRoute = window.UidRouting.resolveUidRoute(location.href);
+
+if (uidRoute.navigation === "location") {
+    location.replace(uidRoute.target);
+    return;
+} else if (uidRoute.navigation === "history") {
+    history.replaceState(history.state, "", uidRoute.target);
+}
+
 const element = (id) => document.getElementById(id);
-const uid = new URLSearchParams(location.search).get("uid");
+const { uid, hasUid, isValidUid } = uidRoute;
 const webuiVersion = "WebUI v1.2.0";
 const APP_CONFIG = {
     assets: {
@@ -16,7 +26,7 @@ const APP_CONFIG = {
     },
     urls: {
         apiBase: "https://api.bluearchive.cafe",
-        shareBase: "https://control.bluearchive.cafe"
+        shareBase: "https://dash.bluearchive.cafe"
     },
     fetch: {
         timeout: 10000,
@@ -47,9 +57,6 @@ const resourceVersions = {
     voice: null,
     media: null
 };
-const hasUid = typeof uid === "string" && uid.trim() !== "";
-const isValidUid = hasUid && /^[A-Z]{8}$/.test(uid.trim());
-
 /* ——————————————————————————————
  * 网络层：超时 + 重试
  * —————————————————————————————— */
@@ -298,7 +305,7 @@ const getDiagnosticsLines = () => {
         `视口尺寸: ${viewport}`,
         `屏幕尺寸: ${screenSize}`,
         `设备像素比: ${window.devicePixelRatio || 1}`,
-        `控制面板 UID: ${hasUid ? uid : "未提供"}`,
+        `控制面板 UID: ${isValidUid ? uid : "未提供"}`,
         `当前地址: ${location.href}`,
         formatVersionLine("文本资源版本", resourceVersions.text),
         formatVersionLine("语音资源版本", resourceVersions.voice),
@@ -509,7 +516,7 @@ element("copy-button").addEventListener("click", async () => {
         return;
     }
 
-    const shareUrl = `${APP_CONFIG.urls.shareBase}?uid=${uid}`;
+    const shareUrl = `${APP_CONFIG.urls.shareBase}/${uid}`;
     const copied = await copyText(shareUrl);
 
     showTextDialog({
@@ -720,3 +727,4 @@ const init = async () => {
 };
 
 init();
+})();
