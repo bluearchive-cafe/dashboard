@@ -45,7 +45,7 @@ http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 
 - 页面依赖网络连接才能正常使用
 - 页面会访问远程接口读取和保存配置
-- 页面样式依赖在线资源，网络受限时可能显示异常
+- 页面核心样式、控件与字体使用本地静态资源，网络受限时仍可正常显示
 - 如果没有提供有效的 UID，页面无法读取配置，也无法保存设置
 
 ## 页面怎么用
@@ -164,10 +164,19 @@ https://dash.bluearchive.cafe/XXXXXXXX
 
 ## 开发验证
 
-使用 Node.js 内置测试运行全部测试：
+首次克隆或更新依赖后，先执行：
 
 ```text
-node --test
+npm install
+npm run vendor:sync
+```
+
+这会将锁定版本的 MDUI、Noto Sans、Noto Sans SC 和 Material Icons 同步到 `assets/vendor/`。更新这些依赖时，必须同时提交同步后的本地资源。
+
+然后使用 Node.js 内置测试运行全部测试：
+
+```text
+npm test
 ```
 
 ## License

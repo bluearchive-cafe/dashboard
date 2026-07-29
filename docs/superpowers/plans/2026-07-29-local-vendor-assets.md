@@ -2,7 +2,7 @@
 
 > **面向 AI 代理的工作者：** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务实现此计划。步骤使用复选框（`- [ ]`）语法来跟踪进度。
 
-**目标：** 固定 MDUI、Noto Sans 和 Noto Sans SC 的 npm 版本，并发布为本地静态资源。
+**目标：** 固定 MDUI、Noto Sans、Noto Sans SC 和 Material Icons 的 npm 版本，并发布为本地静态资源。
 
 **架构：** `package.json` 锁定三个依赖。同步脚本从 `node_modules` 复制 MDUI 与所需 WOFF2 至 `assets/vendor/`；HTML 改用本地资源。Node 契约测试阻止 CDN 与缺失资产回归。
 
@@ -87,12 +87,12 @@ test("同步后的本地依赖及字体文件齐全", () => {
 创建：
 
 ```json
-{"private":true,"scripts":{"vendor:sync":"node scripts/sync-vendor-assets.mjs","test":"node --test"},"dependencies":{"@fontsource/noto-sans":"5.3.0","@fontsource/noto-sans-sc":"5.3.0","mdui":"2.1.5"}}
+{"private":true,"scripts":{"vendor:sync":"node scripts/sync-vendor-assets.mjs","test":"node --test"},"dependencies":{"@fontsource/material-icons":"5.3.0","@fontsource/noto-sans":"5.3.0","@fontsource/noto-sans-sc":"5.3.0","mdui":"2.1.5"}}
 ```
 
 - [ ] **步骤 4：实现最少同步脚本**
 
-使用 `node:fs/promises` 的 `mkdir`、`copyFile`、`readFile`、`writeFile`。复制 `mdui/mdui.css` 与 `mdui/mdui.global.js`；读取 `@fontsource/noto-sans/{latin-400,latin-500,latin-700}.css`、`@fontsource/noto-sans-sc/{chinese-simplified-400,chinese-simplified-500,chinese-simplified-700}.css`；解析 CSS `url()`，复制 WOFF2 到 `assets/vendor/fonts/files/`，拼接生成保持 `font-display: swap` 的 `fonts.css`。源文件或 WOFF2 缺失时抛错。
+使用 `node:fs/promises` 的 `mkdir`、`copyFile`、`readFile`、`writeFile`。复制 `mdui/mdui.css` 与 `mdui/mdui.global.js`；读取 Noto Sans 的 `latin-{400,500,700}.css`、Noto Sans SC 的 `chinese-simplified-{400,500,700}.css` 及 Material Icons 的 `latin-400.css`；解析 CSS `url()`，复制 WOFF2 到 `assets/vendor/fonts/files/`，拼接生成保持 `font-display: swap` 的 `fonts.css`。源文件或 WOFF2 缺失时抛错。
 
 - [ ] **步骤 5：生成资产并验证绿灯**
 
