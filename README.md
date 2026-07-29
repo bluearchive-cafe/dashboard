@@ -27,10 +27,10 @@ https://dash.bluearchive.cafe/XXXXXXXX
 
 旧版 `dash.bluearchive.cafe?uid=XXXXXXXX`、`control.bluearchive.cafe?uid=XXXXXXXX` 和 `control.bluearchive.cafe/XXXXXXXX` 链接会自动迁移到上述路径格式。
 
-本地预览时，可以启动静态 HTTP 服务器：
+本地预览时，执行：
 
 ```text
-python -m http.server 8080
+npm run dev
 ```
 
 然后使用兼容静态服务器的查询参数入口：
