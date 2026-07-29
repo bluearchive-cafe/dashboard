@@ -232,3 +232,28 @@ test("ESA 与 HTML 入口契约保持精确", () => {
     assert.ok(baseIndex >= 0 && baseIndex < headEnd);
     assert.ok(routingScriptIndex >= 0 && routingScriptIndex < controllerScriptIndex);
 });
+
+test("页面只从本地加载 MDUI 与字体资源", () => {
+    const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+    assert.match(html, /assets\/vendor\/fonts\/fonts\.css/);
+    assert.match(html, /assets\/vendor\/mdui\/mdui\.css/);
+    assert.match(html, /assets\/vendor\/mdui\/mdui\.global\.js/);
+    assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com\/mdui/);
+});
+
+test("同步后的本地依赖及字体文件齐全", () => {
+    const files = [
+        "assets/vendor/mdui/mdui.css",
+        "assets/vendor/mdui/mdui.global.js",
+        "assets/vendor/fonts/fonts.css"
+    ];
+
+    for (const file of files) {
+        assert.equal(fs.existsSync(path.join(ROOT, file)), true, file);
+    }
+
+    const css = fs.readFileSync(path.join(ROOT, "assets/vendor/fonts/fonts.css"), "utf8");
+    for (const match of css.matchAll(/url\(['"]?(.+?\.woff2?)['"]?\)/g)) {
+        assert.equal(fs.existsSync(path.join(ROOT, "assets/vendor/fonts", match[1])), true, match[1]);
+    }
+});
