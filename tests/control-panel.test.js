@@ -257,3 +257,9 @@ test("同步后的本地依赖及字体文件齐全", () => {
         assert.equal(fs.existsSync(path.join(ROOT, "assets/vendor/fonts", match[1])), true, match[1]);
     }
 });
+
+test("README 说明本地资源同步流程", () => {
+    const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
+    assert.match(readme, /npm install/);
+    assert.match(readme, /npm run vendor:sync/);
+});
