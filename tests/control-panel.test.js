@@ -263,3 +263,14 @@ test("README 说明本地资源同步流程", () => {
     assert.match(readme, /npm install/);
     assert.match(readme, /npm run vendor:sync/);
 });
+
+test("npm 提供稳定的静态开发预览命令", () => {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
+    assert.equal(packageJson.name, "dashboard");
+    assert.equal(packageJson.scripts.dev, "python -m http.server 8080");
+});
+
+test("README 说明 npm 开发预览命令", () => {
+    const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
+    assert.match(readme, /npm run dev/);
+});

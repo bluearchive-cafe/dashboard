@@ -1,6 +1,8 @@
 {
+  "name": "dashboard",
   "private": true,
   "scripts": {
+    "dev": "python -m http.server 8080",
     "vendor:sync": "node scripts/sync-vendor-assets.mjs",
     "test": "node --test"
   },
