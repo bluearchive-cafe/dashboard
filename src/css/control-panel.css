@@ -276,6 +276,28 @@ body {
     -webkit-mask-image: url('../icons/status-error.svg');
 }
 
+/* —— 操作按钮图标 CSS class 驱动（替代 inline style）—— */
+
+.action-icon-save {
+    mask-image: url('../icons/action-save.svg');
+    -webkit-mask-image: url('../icons/action-save.svg');
+}
+
+.action-icon-help {
+    mask-image: url('../icons/action-help.svg');
+    -webkit-mask-image: url('../icons/action-help.svg');
+}
+
+.action-icon-copy-link {
+    mask-image: url('../icons/action-copy-link.svg');
+    -webkit-mask-image: url('../icons/action-copy-link.svg');
+}
+
+.action-icon-diagnose {
+    mask-image: url('../icons/action-diagnose.svg');
+    -webkit-mask-image: url('../icons/action-diagnose.svg');
+}
+
 /* ——————————————————————————————
  * 屏幕阅读器专用（视觉隐藏但可被读屏捕获）
  * —————————————————————————————— */

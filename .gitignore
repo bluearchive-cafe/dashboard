@@ -138,5 +138,8 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Vite cache
+.vite/
+
 # Claude Code 工作空间
 .claude/

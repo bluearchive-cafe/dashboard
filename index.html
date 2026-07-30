@@ -7,20 +7,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔚蓝咖啡厅 - 资源控制面板</title>
 
-    <!-- 预加载关键 CSS -->
-    <link rel="preload" href="assets/css/control-panel.css" as="style">
-    <link rel="preload" href="assets/css/control-panel-responsive.css" as="style">
-
-    <!-- 本地字体与图标 -->
-    <link rel="stylesheet" href="assets/vendor/fonts/fonts.css">
-
-    <!-- MDUI v2 -->
-    <link rel="stylesheet" href="assets/vendor/mdui/mdui.css">
-
-    <!-- 项目样式 -->
-    <link rel="stylesheet" href="assets/css/control-panel.css">
-    <link rel="stylesheet" href="assets/css/control-panel-responsive.css">
-
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-2ELMBHNMZX"></script>
     <script>
@@ -30,11 +16,14 @@
 
         gtag('config', 'G-2ELMBHNMZX');
     </script>
+
+    <!-- Vite entry module (CSS and JS bundled together) -->
+    <script type="module" src="/src/main.js"></script>
 </head>
 
 <body>
     <div class="page-background" aria-hidden="true">
-        <img src="assets/images/background.png" alt="">
+        <img src="/assets/images/background.png" alt="">
     </div>
     <div class="page-overlay" aria-hidden="true"></div>
     <div class="shell">
@@ -100,25 +89,25 @@
         <div class="actions">
             <mdui-button id="save-button" variant="filled">
                 <span class="action-content">
-                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-save.svg');-webkit-mask-image:url('assets/icons/action-save.svg');"></span>
+                    <span class="ui-icon action-icon-save" aria-hidden="true"></span>
                     <span>保存设置</span>
                 </span>
             </mdui-button>
             <mdui-button id="read-button" variant="tonal">
                 <span class="action-content">
-                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-help.svg');-webkit-mask-image:url('assets/icons/action-help.svg');"></span>
+                    <span class="ui-icon action-icon-help" aria-hidden="true"></span>
                     <span>查看说明</span>
                 </span>
             </mdui-button>
             <mdui-button id="copy-button" variant="outlined">
                 <span class="action-content">
-                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-copy-link.svg');-webkit-mask-image:url('assets/icons/action-copy-link.svg');"></span>
+                    <span class="ui-icon action-icon-copy-link" aria-hidden="true"></span>
                     <span>复制链接</span>
                 </span>
             </mdui-button>
             <mdui-button id="diagnose-button" variant="outlined">
                 <span class="action-content">
-                    <span class="ui-icon" aria-hidden="true" style="mask-image:url('assets/icons/action-diagnose.svg');-webkit-mask-image:url('assets/icons/action-diagnose.svg');"></span>
+                    <span class="ui-icon action-icon-diagnose" aria-hidden="true"></span>
                     <span>诊断信息</span>
                 </span>
             </mdui-button>
@@ -129,11 +118,6 @@
             使用 MDUI 构建 | <span id="webui-version"></span> | Developer: roundRekt, KFACBT
         </footer>
     </div>
-
-    <!-- MDUI v2 JS -->
-    <script src="assets/vendor/mdui/mdui.global.js"></script>
-    <script src="assets/js/uid-routing.js"></script>
-    <script src="./assets/js/control-panel.js"></script>
 </body>
 
 </html>

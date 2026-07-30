@@ -1,9 +1,9 @@
 {
   "name": "dashboard",
-  "installCommand": "",
-  "buildCommand": "",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "assets": {
-    "directory": "./",
+    "directory": "./dist",
     "notFoundStrategy": "singlePageApplication"
   }
 }

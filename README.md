@@ -33,19 +33,17 @@ https://dash.bluearchive.cafe/XXXXXXXX
 npm run dev
 ```
 
-然后使用兼容静态服务器的查询参数入口：
+然后使用查询参数入口打开页面：
 
 ```text
-http://127.0.0.1:8080/index.html?uid=XXXXXXXX
+http://localhost:8080/?uid=XXXXXXXX
 ```
-
-`python -m http.server` 不支持直接刷新 SPA 路径。直接打开 `/XXXXXXXX` 或在该路径刷新必须在 ESA Pages 预览环境验证。
 
 ## 使用前请注意
 
 - 页面依赖网络连接才能正常使用
 - 页面会访问远程接口读取和保存配置
-- 页面核心样式、控件与字体使用本地静态资源，网络受限时仍可正常显示
+- 页面样式、控件与字体通过 Vite 打包，网络受限时仍可正常显示
 - 如果没有提供有效的 UID，页面无法读取配置，也无法保存设置
 
 ## 页面怎么用
@@ -62,7 +60,7 @@ http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 
 - `加载中`：正在读取数据
 - `可用`：当前资源状态正常
-- `待更新`：资源可能需要更新后才能正常使用
+- `待维护`：资源可能需要更新后才能正常使用
 - `获取失败`：页面未能成功读取状态
 
 建议先确认状态，再决定是否开启对应功能。
@@ -77,7 +75,7 @@ http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 
 你可以根据需要打开或关闭它们。
 
-### 3. 点击“保存设置”
+### 3. 点击"保存设置"
 
 调整完成后，点击 `保存设置`，页面会将当前开关状态提交到服务器。
 
@@ -89,11 +87,11 @@ http://127.0.0.1:8080/index.html?uid=XXXXXXXX
 
 如果保存失败，页面会弹出相应提示。
 
-### 4. 点击“查看说明”
+### 4. 点击"查看说明"
 
 如果你不确定每个选项的作用，可以点击 `查看说明`。页面会弹出简要操作提示。
 
-### 5. 点击“复制链接”
+### 5. 点击"复制链接"
 
 点击后，页面会尝试复制当前控制面板链接，方便你发给别人或自己留存。
 
@@ -105,7 +103,7 @@ https://dash.bluearchive.cafe/XXXXXXXX
 
 只有当前页面包含有效 UID 时，才能正确生成可分享链接。
 
-### 6. 点击“诊断信息”
+### 6. 点击"诊断信息"
 
 如果页面异常、状态获取失败或保存失败，可以点击 `诊断信息` 查看当前环境信息，用于排查问题。
 
@@ -119,7 +117,7 @@ https://dash.bluearchive.cafe/XXXXXXXX
 
 ## 常见问题
 
-### 页面提示“链接无效”
+### 页面提示"链接无效"
 
 这表示当前页面地址中缺少 UID。
 
@@ -129,7 +127,7 @@ https://dash.bluearchive.cafe/XXXXXXXX
 https://dash.bluearchive.cafe/XXXXXXXX
 ```
 
-如果页面提示“UID 格式无效”，请确认 UID 严格由八位大写字母组成。
+如果页面提示"UID 格式无效"，请确认 UID 严格由八位大写字母组成。
 
 ### 状态一直显示获取失败
 
@@ -145,7 +143,6 @@ https://dash.bluearchive.cafe/XXXXXXXX
 
 - 当前页面没有有效 UID
 - 浏览器限制了剪贴板写入权限
-- 当前运行环境对 `file://` 页面支持较差
 
 ### 保存设置失败
 
@@ -160,24 +157,37 @@ https://dash.bluearchive.cafe/XXXXXXXX
 - 尽量使用别人提供的完整控制面板链接直接打开
 - 修改设置前，先确认三类资源状态是否正常
 - 保存成功后，按页面提示重启游戏再确认效果
-- 如果遇到异常，优先查看“诊断信息”并保留当前链接
+- 如果遇到异常，优先查看"诊断信息"并保留当前链接
 
-## 开发验证
+## 开发
 
-首次克隆或更新依赖后，先执行：
+### 环境准备
 
-```text
+```bash
 npm install
-npm run vendor:sync
 ```
 
-这会将锁定版本的 MDUI、Noto Sans、Noto Sans SC 和 Material Icons 同步到 `assets/vendor/`。更新这些依赖时，必须同时提交同步后的本地资源。
+### 常用命令
 
-然后使用 Node.js 内置测试运行全部测试：
-
-```text
-npm test
+```bash
+npm run dev       # 启动 Vite 开发服务器 (localhost:8080)
+npm run build     # 生产构建到 dist/
+npm run preview   # 预览生产构建
+npm test          # 运行全部测试
+npm run lint      # ESLint 代码检查
+npm run format    # Prettier 代码格式化
 ```
+
+### 项目结构
+
+- `index.html` — 页面入口
+- `src/main.js` — Vite 入口模块
+- `src/modules/` — JS 模块（配置、网络、状态、对话框等）
+- `src/lib/uid-routing.js` — UID 路由解析
+- `src/css/` — 样式文件
+- `src/icons/` — SVG 图标
+- `public/` — 静态资源
+- `tests/` — Vitest 测试
 
 ## License
 

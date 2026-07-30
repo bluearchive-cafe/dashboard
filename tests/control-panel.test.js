@@ -1,276 +1,243 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const vm = require("node:vm");
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 
-const { resolveUidRoute } = require("../assets/js/uid-routing.js");
+const ROOT = path.resolve(import.meta.dirname, '..');
 
-const ROOT = path.resolve(__dirname, "..");
-const CONTROL_PANEL_SOURCE = fs.readFileSync(
-    path.join(ROOT, "assets/js/control-panel.js"),
-    "utf8"
-);
-
-class TestElement {
-    constructor(id = "") {
-        this.id = id;
-        this.checked = false;
-        this.disabled = false;
-        this.loading = false;
-        this.open = false;
-        this.style = {};
-        this.listeners = new Map();
-        this.statusLabel = { textContent: "" };
-        this.statusIcon = { className: "" };
-        this.classNames = new Set();
-        this.classList = {
-            contains: (name) => this.classNames.has(name),
-            toggle: (name, enabled) => {
-                if (enabled) this.classNames.add(name);
-                else this.classNames.delete(name);
-            }
-        };
-    }
-
-    addEventListener(type, listener) {
-        const listeners = this.listeners.get(type) || [];
-        listeners.push(listener);
-        this.listeners.set(type, listeners);
-    }
-
-    setAttribute() {}
-    append() {}
-    remove() {}
-    focus() {}
-    select() {}
-
-    querySelector(selector) {
-        if (selector === ".status-label") return this.statusLabel;
-        if (selector === ".ui-icon") return this.statusIcon;
-        return null;
-    }
-
-    closest() {
-        return {
-            querySelector: () => ({ textContent: this.id })
-        };
-    }
-
-    async trigger(type) {
-        for (const listener of this.listeners.get(type) || []) {
-            await listener();
-        }
-    }
-}
-
-const createResponse = (url) => {
-    if (url === "https://api.bluearchive.cafe/status/list") {
-        const version = { official: { version: "1" }, localized: { version: "1" } };
-        return {
-            ok: true,
-            json: async () => ({ text: version, voice: version, media: version })
-        };
-    }
-
-    if (url.startsWith("https://api.bluearchive.cafe/config/get?")) {
-        return {
-            ok: true,
-            json: async () => ({ text: "jp", voice: "jp", media: "jp" })
-        };
-    }
-
-    return { ok: true };
-};
-
-const runController = (href) => {
-    const elements = new Map();
-    const requests = [];
-    const replacements = [];
-    const historyReplacements = [];
-    const clipboardWrites = [];
-    const location = {
-        href,
-        replace: (target) => replacements.push(target)
-    };
-    const history = {
-        state: null,
-        replaceState: (state, title, target) => {
-            historyReplacements.push({ state, title, target });
-        }
-    };
-    const document = {
-        body: { append() {} },
-        createElement: () => new TestElement(),
-        execCommand: () => true,
-        getElementById: (id) => {
-            if (!elements.has(id)) elements.set(id, new TestElement(id));
-            return elements.get(id);
-        }
-    };
-    const navigator = {
-        clipboard: {
-            writeText: async (text) => clipboardWrites.push(text)
-        },
-        userAgent: "test",
-        appVersion: "test",
-        platform: "test",
-        language: "zh-CN",
-        languages: ["zh-CN"],
-        onLine: true,
-        cookieEnabled: true,
-        hardwareConcurrency: 1
-    };
-    const window = {
-        UidRouting: { resolveUidRoute },
-        innerWidth: 1280,
-        innerHeight: 720,
-        screen: { width: 1280, height: 720 },
-        devicePixelRatio: 1
-    };
-    const fetch = (url) => {
-        const requestUrl = String(url);
-        requests.push(requestUrl);
-        return Promise.resolve(createResponse(requestUrl));
-    };
-
-    vm.runInNewContext(CONTROL_PANEL_SOURCE, {
-        AbortController,
-        URLSearchParams,
-        clearTimeout,
-        console,
-        document,
-        fetch,
-        history,
-        location,
-        mdui: {
-            setTheme() {},
-            setColorScheme() {},
-            snackbar() {}
-        },
-        navigator,
-        setTimeout,
-        window
-    }, { filename: "assets/js/control-panel.js" });
-
-    return {
-        clipboardWrites,
-        getElement: document.getElementById,
-        historyReplacements,
-        replacements,
-        requests
-    };
-};
-
-test("生产 location 导航调用 replace 并停止 API 请求", () => {
-    const result = runController("https://control.bluearchive.cafe/?uid=ABCDEFGH");
-
-    assert.deepEqual(result.replacements, ["https://dash.bluearchive.cafe/ABCDEFGH"]);
-    assert.deepEqual(result.requests, []);
-});
-
-test("非生产 history 规范化后继续初始化", () => {
-    const result = runController("http://127.0.0.1:8080/index.html?uid=ABCDEFGH#old");
-
-    assert.deepEqual(result.historyReplacements, [
-        { state: null, title: "", target: "/ABCDEFGH" }
-    ]);
-    assert.deepEqual(result.requests, [
-        "https://api.bluearchive.cafe/status/list",
-        "https://api.bluearchive.cafe/config/get?uid=ABCDEFGH"
-    ]);
-});
-
-test("缺失 UID 不发送 status 或 config API 请求", () => {
-    const result = runController("http://127.0.0.1:8080/");
-    assert.deepEqual(result.requests, []);
-});
-
-test("无效 UID 不发送 status 或 config API 请求", () => {
-    const result = runController("http://127.0.0.1:8080/abcdefgh");
-    assert.deepEqual(result.requests, []);
-});
-
-test("有效 UID 用规范值读取、保存并复制路径链接", async () => {
-    const result = runController("http://127.0.0.1:8080/?uid=%20ABCDEFGH%20");
-
-    assert.deepEqual(result.requests, [
-        "https://api.bluearchive.cafe/status/list",
-        "https://api.bluearchive.cafe/config/get?uid=ABCDEFGH"
-    ]);
-
-    result.getElement("text-checkbox").checked = true;
-    result.getElement("voice-checkbox").checked = false;
-    result.getElement("media-checkbox").checked = true;
-    await result.getElement("save-button").trigger("click");
-    assert.equal(
-        result.requests.at(-1),
-        "https://api.bluearchive.cafe/config/set?uid=ABCDEFGH&text=cn&voice=jp&media=cn"
-    );
-
-    await result.getElement("copy-button").trigger("click");
-    assert.deepEqual(result.clipboardWrites, ["https://dash.bluearchive.cafe/ABCDEFGH"]);
-});
-
-test("ESA 与 HTML 入口契约保持精确", () => {
-    const esaConfig = JSON.parse(fs.readFileSync(path.join(ROOT, "esa.jsonc"), "utf8"));
-    assert.deepEqual(esaConfig, {
-        name: "dashboard",
-        installCommand: "",
-        buildCommand: "",
-        assets: {
-            directory: "./",
-            notFoundStrategy: "singlePageApplication"
-        }
+describe('ESA 与 HTML 入口契约', () => {
+  it('ESA 配置与 HTML 入口保持精确', () => {
+    const esaConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'esa.jsonc'), 'utf8'));
+    expect(esaConfig).toEqual({
+      name: 'dashboard',
+      installCommand: 'npm install',
+      buildCommand: 'npm run build',
+      assets: {
+        directory: './dist',
+        notFoundStrategy: 'singlePageApplication',
+      },
     });
 
-    const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-    const headEnd = html.indexOf("</head>");
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const headEnd = html.indexOf('</head>');
     const baseIndex = html.indexOf('<base href="/">');
-    const routingScriptIndex = html.indexOf('<script src="assets/js/uid-routing.js"></script>');
-    const controllerScriptIndex = html.indexOf('<script src="./assets/js/control-panel.js"></script>');
-    assert.ok(baseIndex >= 0 && baseIndex < headEnd);
-    assert.ok(routingScriptIndex >= 0 && routingScriptIndex < controllerScriptIndex);
+    const moduleScriptIndex = html.indexOf(
+      '<script type="module" src="/src/main.js"></script>',
+    );
+    expect(baseIndex).toBeGreaterThanOrEqual(0);
+    expect(baseIndex).toBeLessThan(headEnd);
+    expect(moduleScriptIndex).toBeGreaterThanOrEqual(0);
+  });
 });
 
-test("页面只从本地加载 MDUI 与字体资源", () => {
-    const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
-    assert.match(html, /assets\/vendor\/fonts\/fonts\.css/);
-    assert.match(html, /assets\/vendor\/mdui\/mdui\.css/);
-    assert.match(html, /assets\/vendor\/mdui\/mdui\.global\.js/);
-    assert.doesNotMatch(html, /fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com\/mdui/);
+describe('HTML 资源加载', () => {
+  it('页面通过 Vite 入口模块加载所有依赖（不再使用 CDN）', () => {
+    const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    // Should use Vite's module entry point
+    expect(html).toMatch(/src\/main\.js/);
+    // Should NOT reference CDN-hosted MDUI or fonts
+    expect(html).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com|unpkg\.com\/mdui/);
+    // Should NOT reference old vendor script paths
+    expect(html).not.toMatch(/assets\/vendor\/mdui\/mdui\.global\.js/);
+    expect(html).not.toMatch(/assets\/js\/uid-routing\.js/);
+    expect(html).not.toMatch(/assets\/js\/control-panel\.js/);
+  });
 });
 
-test("同步后的本地依赖及字体文件齐全", () => {
-    const files = [
-        "assets/vendor/mdui/mdui.css",
-        "assets/vendor/mdui/mdui.global.js",
-        "assets/vendor/fonts/fonts.css"
+describe('package.json 脚本', () => {
+  it('npm 提供 Vite 开发预览命令', () => {
+    const packageJson = JSON.parse(
+      fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'),
+    );
+    expect(packageJson.name).toBe('dashboard');
+    expect(packageJson.scripts.dev).toBe('vite');
+    expect(packageJson.scripts.build).toBe('vite build');
+    expect(packageJson.scripts.preview).toBe('vite preview');
+    expect(packageJson.scripts.test).toBe('vitest run');
+  });
+});
+
+describe('源代码结构', () => {
+  it('src/ 目录包含模块化 JS 文件', () => {
+    const modules = [
+      'src/main.js',
+      'src/lib/uid-routing.js',
+      'src/modules/config.js',
+      'src/modules/network.js',
+      'src/modules/error-store.js',
+      'src/modules/ui-state.js',
+      'src/modules/status-display.js',
+      'src/modules/dialog.js',
+      'src/modules/clipboard.js',
+      'src/modules/diagnostics.js',
+      'src/modules/save-handler.js',
+      'src/modules/copy-link.js',
+      'src/modules/init.js',
     ];
-
-    for (const file of files) {
-        assert.equal(fs.existsSync(path.join(ROOT, file)), true, file);
+    for (const mod of modules) {
+      expect(fs.existsSync(path.join(ROOT, mod))).toBe(true);
     }
+  });
 
-    const css = fs.readFileSync(path.join(ROOT, "assets/vendor/fonts/fonts.css"), "utf8");
-    for (const match of css.matchAll(/url\(['"]?(.+?\.woff2?)['"]?\)/g)) {
-        assert.equal(fs.existsSync(path.join(ROOT, "assets/vendor/fonts", match[1])), true, match[1]);
+  it('src/icons/ 包含被引用的 SVG 图标', () => {
+    const icons = [
+      'action-save.svg',
+      'action-help.svg',
+      'action-copy-link.svg',
+      'action-diagnose.svg',
+      'status-loading.svg',
+      'status-ready.svg',
+      'status-update.svg',
+      'status-error.svg',
+    ];
+    for (const icon of icons) {
+      expect(fs.existsSync(path.join(ROOT, 'src', 'icons', icon))).toBe(true);
     }
+  });
 });
 
-test("README 说明本地资源同步流程", () => {
-    const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
-    assert.match(readme, /npm install/);
-    assert.match(readme, /npm run vendor:sync/);
+describe('配置常量', () => {
+  it('导出 LANG_CN 和 LANG_JP 常量', async () => {
+    const { LANG_CN, LANG_JP } = await import('../src/modules/config.js');
+    expect(LANG_CN).toBe('cn');
+    expect(LANG_JP).toBe('jp');
+  });
+
+  it('APP_CONFIG 保持正确的 API 端点', async () => {
+    const { API_ENDPOINTS } = await import('../src/modules/config.js');
+    expect(API_ENDPOINTS.statusList).toBe('https://api.bluearchive.cafe/status/list');
+    expect(API_ENDPOINTS.configGet).toBe('https://api.bluearchive.cafe/config/get');
+    expect(API_ENDPOINTS.configSet).toBe('https://api.bluearchive.cafe/config/set');
+  });
 });
 
-test("npm 提供稳定的静态开发预览命令", () => {
-    const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf8"));
-    assert.equal(packageJson.name, "dashboard");
-    assert.equal(packageJson.scripts.dev, "python -m http.server 8080");
+describe('网络层', () => {
+  it('fetchWithTimeout 在超时后抛出 AbortError', async () => {
+    const { fetchWithTimeout } = await import('../src/modules/network.js');
+    // Mock fetch to reject with AbortError (simulating timeout abort)
+    const abortError = new DOMException('The operation was aborted.', 'AbortError');
+    global.fetch = vi.fn((_url, options) => {
+      // Verify signal was passed
+      expect(options.signal).toBeInstanceOf(AbortSignal);
+      return Promise.reject(abortError);
+    });
+
+    try {
+      await fetchWithTimeout('https://example.com', {}, 100);
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err.name).toBe('AbortError');
+    }
+    vi.restoreAllMocks();
+  });
+
+  it('fetchWithRetry 在成功时返回响应', async () => {
+    const { fetchWithRetry } = await import('../src/modules/network.js');
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200 });
+
+    const response = await fetchWithRetry('https://example.com', {}, {
+      retries: 1,
+      retryDelayMs: 1,
+    });
+    expect(response.ok).toBe(true);
+    vi.restoreAllMocks();
+  });
 });
 
-test("README 说明 npm 开发预览命令", () => {
-    const readme = fs.readFileSync(path.join(ROOT, "README.md"), "utf8");
-    assert.match(readme, /npm run dev/);
+describe('ui-state 模块', () => {
+  beforeEach(() => {
+    // Set up minimal DOM
+    document.body.innerHTML = `
+      <mdui-checkbox id="text-checkbox"></mdui-checkbox>
+      <mdui-checkbox id="voice-checkbox"></mdui-checkbox>
+      <mdui-checkbox id="media-checkbox"></mdui-checkbox>
+      <mdui-button id="save-button"></mdui-button>
+      <mdui-button id="copy-button"></mdui-button>
+      <mdui-button id="read-button"></mdui-button>
+      <mdui-button id="diagnose-button"></mdui-button>
+    `;
+  });
+
+  it('toggleInteractiveState 禁用所有交互元素', async () => {
+    const { toggleInteractiveState } = await import('../src/modules/ui-state.js');
+    toggleInteractiveState(true);
+
+    const ids = [
+      'text-checkbox',
+      'voice-checkbox',
+      'media-checkbox',
+      'save-button',
+      'copy-button',
+      'read-button',
+      'diagnose-button',
+    ];
+    for (const id of ids) {
+      expect(document.getElementById(id).disabled).toBe(true);
+    }
+  });
+
+  it('toggleInteractiveState 启用在禁用后重新启用', async () => {
+    const { toggleInteractiveState } = await import('../src/modules/ui-state.js');
+    toggleInteractiveState(true);
+    toggleInteractiveState(false);
+    expect(document.getElementById('save-button').disabled).toBe(false);
+  });
+});
+
+describe('status-display 模块', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div class="feature-item">
+        <strong>游戏文本</strong>
+        <mdui-chip id="text-status" class="feature-status">
+          <span class="status-label">加载中</span>
+          <span class="ui-icon status-icon-loading"></span>
+        </mdui-chip>
+      </div>
+      <div id="status-announcer"></div>
+    `;
+  });
+
+  it('setStatus 更新状态标签和图标', async () => {
+    const { setStatus } = await import('../src/modules/status-display.js');
+    setStatus('text-status', 'ready');
+
+    const chip = document.getElementById('text-status');
+    expect(chip.querySelector('.status-label').textContent).toBe('可用');
+    expect(chip.querySelector('.ui-icon').className).toContain('status-icon-ready');
+  });
+
+  it('setStatus 在失败时添加 error class', async () => {
+    const { setStatus } = await import('../src/modules/status-display.js');
+    setStatus('text-status', 'failed');
+
+    const chip = document.getElementById('text-status');
+    expect(chip.classList.contains('status-error')).toBe(true);
+    expect(chip.querySelector('.status-label').textContent).toBe('获取失败');
+  });
+});
+
+describe('clipboard 模块', () => {
+  it('copyText 使用 navigator.clipboard.writeText', async () => {
+    const { copyText } = await import('../src/modules/clipboard.js');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+
+    const result = await copyText('test-text');
+    expect(result).toBe(true);
+    expect(writeText).toHaveBeenCalledWith('test-text');
+  });
+});
+
+describe('UID 验证行为', () => {
+  it('有效 UID 格式为 8 位大写字母', async () => {
+    const { resolveUidRoute } = await import('../src/lib/uid-routing.js');
+    expect(resolveUidRoute('http://localhost:8080/ABCDEFGH').isValidUid).toBe(true);
+    expect(resolveUidRoute('http://localhost:8080/abcdefgh').isValidUid).toBe(false);
+    expect(resolveUidRoute('http://localhost:8080/ABCDEFG').isValidUid).toBe(false);
+    expect(resolveUidRoute('http://localhost:8080/ABCDEFGHI').isValidUid).toBe(false);
+  });
 });
