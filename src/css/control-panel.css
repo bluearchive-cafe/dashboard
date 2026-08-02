@@ -2,22 +2,16 @@
     color-scheme: light dark;
 
     /*
-     * 毛玻璃面板与投影（项目视觉特色）
-     * 保留半透明材质效果，不直接映射 M3 surface token
+     * 轻量表面与浅阴影
+     * 默认减少毛玻璃和大范围模糊，降低低性能设备合成压力
      */
-    --panel-bg: rgba(255, 255, 255, 0.58);
-    --surface-bg: rgba(255, 255, 255, 0.68);
-    --surface-border: rgba(255, 255, 255, 0.48);
-    --overlay-gradient:
-        linear-gradient(135deg, rgba(238, 246, 255, 0.52), rgba(255, 247, 240, 0.42)),
-        rgba(255, 255, 255, 0.26);
+    --panel-bg: rgba(248, 251, 255, 0.94);
+    --surface-bg: rgba(255, 255, 255, 0.96);
+    --surface-border: var(--mdui-color-outline-variant, rgba(148, 163, 184, 0.28));
+    --overlay-gradient: linear-gradient(135deg, rgba(238, 246, 255, 0.42), rgba(255, 247, 240, 0.28));
 
-    /*
-     * M3 Elevation Level 3 结构 + 品牌色微调
-     * 标准 L3: 0 1px 3px rgba(0,0,0,0.3), 0 4px 8px 3px rgba(0,0,0,0.15)
-     * 此处保留微弱的品牌蓝色调，但强度对齐 M3
-     */
-    --hero-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 4px 12px 2px rgba(58, 89, 127, 0.12);
+    /* 保留层级提示，但收敛阴影范围 */
+    --hero-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 
     /*
      * M3 Shape Scale 对齐
@@ -79,7 +73,6 @@ body {
     inset: 0;
     z-index: 1;
     background: var(--overlay-gradient);
-    backdrop-filter: blur(1px);
     pointer-events: none;
 }
 
@@ -96,7 +89,6 @@ body {
     padding: 28px;
     border-radius: var(--radius-panel);
     background: var(--panel-bg);
-    backdrop-filter: blur(14px);
     box-shadow: var(--hero-shadow);
 }
 
@@ -133,7 +125,6 @@ body {
     border-radius: var(--radius-section);
     background: var(--surface-bg);
     border: 1px solid var(--surface-border);
-    backdrop-filter: blur(10px);
 }
 
 .feature-item {
@@ -197,20 +188,16 @@ body {
 
 @media (prefers-color-scheme: dark) {
     :root {
-        /* 暗色毛玻璃背景 */
-        --panel-bg: rgba(10, 18, 31, 0.72);
-        --surface-bg: rgba(16, 27, 45, 0.78);
-        --surface-border: rgba(125, 161, 206, 0.22);
+        /* 暗色轻量表面 */
+        --panel-bg: rgba(16, 27, 45, 0.96);
+        --surface-bg: rgba(12, 22, 37, 0.96);
+        --surface-border: var(--mdui-color-outline-variant, rgba(125, 161, 206, 0.24));
         --overlay-gradient:
-            linear-gradient(135deg, rgba(7, 23, 46, 0.5), rgba(7, 43, 79, 0.26)),
-            rgba(3, 10, 18, 0.34);
+            linear-gradient(135deg, rgba(7, 23, 46, 0.34), rgba(7, 43, 79, 0.18)),
+            rgba(3, 10, 18, 0.2);
 
-        /*
-         * 暗色 M3 Elevation：阴影更暗但更紧凑
-         * M3 暗色下 elevation 主要通过 surface tone 提亮表达，
-         * 阴影仅作为辅助，应比亮色主题更收敛
-         */
-        --hero-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px 2px rgba(0, 0, 0, 0.28);
+        /* 暗色下同样收敛阴影，主要依靠 surface tone 表达层级 */
+        --hero-shadow: 0 1px 2px rgba(0, 0, 0, 0.24);
 
         /*
          * 文本色与边框色由 MDUI 的 M3 token 自动切换：
@@ -389,7 +376,8 @@ body {
     }
 
     .hero,
-    .feature-list {
+    .feature-list,
+    .page-overlay {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
     }

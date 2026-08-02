@@ -13,6 +13,8 @@ export const INTERACTIVE_IDS = [
 export const toggleInteractiveState = (disabled) => {
   INTERACTIVE_IDS.forEach((id) => {
     const el = element(id);
-    if (el) el.disabled = disabled;
+    if (el && el.disabled !== disabled) {
+      el.disabled = disabled;
+    }
   });
 };

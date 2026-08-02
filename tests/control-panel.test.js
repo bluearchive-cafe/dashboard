@@ -181,6 +181,31 @@ describe('ui-state 模块', () => {
     toggleInteractiveState(false);
     expect(document.getElementById('save-button').disabled).toBe(false);
   });
+
+  it('toggleInteractiveState 跳过已经处于目标状态的元素', async () => {
+    const { toggleInteractiveState } = await import('../src/modules/ui-state.js');
+    const saveButton = document.getElementById('save-button');
+    const writes = [];
+    let disabledValue = false;
+
+    Object.defineProperty(saveButton, 'disabled', {
+      configurable: true,
+      get: () => disabledValue,
+      set: (value) => {
+        writes.push(value);
+        disabledValue = value;
+      },
+    });
+
+    toggleInteractiveState(false);
+    expect(writes).toEqual([]);
+
+    toggleInteractiveState(true);
+    expect(writes).toEqual([true]);
+
+    toggleInteractiveState(true);
+    expect(writes).toEqual([true]);
+  });
 });
 
 describe('status-display 模块', () => {
@@ -213,6 +238,43 @@ describe('status-display 模块', () => {
     const chip = document.getElementById('text-status');
     expect(chip.classList.contains('status-error')).toBe(true);
     expect(chip.querySelector('.status-label').textContent).toBe('获取失败');
+  });
+
+  it('setStatus 跳过无变化的标签和图标写入', async () => {
+    const { setStatus } = await import('../src/modules/status-display.js');
+    const chip = document.getElementById('text-status');
+    const label = chip.querySelector('.status-label');
+    const icon = chip.querySelector('.ui-icon');
+    const labelWrites = [];
+    const iconWrites = [];
+
+    let labelText = '加载中';
+    Object.defineProperty(label, 'textContent', {
+      configurable: true,
+      get: () => labelText,
+      set: (value) => {
+        labelWrites.push(value);
+        labelText = value;
+      },
+    });
+
+    let iconClassName = 'ui-icon status-icon-loading';
+    Object.defineProperty(icon, 'className', {
+      configurable: true,
+      get: () => iconClassName,
+      set: (value) => {
+        iconWrites.push(value);
+        iconClassName = value;
+      },
+    });
+
+    setStatus('text-status', 'ready');
+    expect(labelWrites).toEqual(['可用']);
+    expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
+
+    setStatus('text-status', 'ready');
+    expect(labelWrites).toEqual(['可用']);
+    expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
   });
 });
 

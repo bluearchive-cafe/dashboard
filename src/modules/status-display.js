@@ -6,21 +6,32 @@ export const setStatus = (id, state) => {
   if (!chip) return;
 
   const style = statusStyles[state];
-  chip.querySelector('.status-label').textContent = style.text;
+  const previousState = chip.dataset.statusState;
+  const label = chip.querySelector('.status-label');
+  if (label && label.textContent !== style.text) {
+    label.textContent = style.text;
+  }
 
   const icon = chip.querySelector('.ui-icon');
-  if (icon) {
-    icon.className = `ui-icon ${style.css}`;
+  const iconClass = `ui-icon ${style.css}`;
+  if (icon && icon.className !== iconClass) {
+    icon.className = iconClass;
   }
 
   // 失败状态使用 M3 error 色
-  chip.classList.toggle('status-error', state === 'failed');
+  const isFailed = state === 'failed';
+  if (chip.classList.contains('status-error') !== isFailed) {
+    chip.classList.toggle('status-error', isFailed);
+  }
 
   // 通知读屏软件状态变化
-  const announcer = element('status-announcer');
-  if (announcer) {
-    const featureName =
-      chip.closest('.feature-item')?.querySelector('strong')?.textContent || id;
-    announcer.textContent = `${featureName}: ${style.text}`;
+  if (previousState !== state) {
+    chip.dataset.statusState = state;
+    const announcer = element('status-announcer');
+    if (announcer) {
+      const featureName =
+        chip.closest('.feature-item')?.querySelector('strong')?.textContent || id;
+      announcer.textContent = `${featureName}: ${style.text}`;
+    }
   }
 };
