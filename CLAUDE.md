@@ -49,7 +49,7 @@ Use the Vite-dev-server page to smoke-test the affected flows:
 - `src/modules/init.js` provides `init(uidRoute)`, the main orchestration function that wires up event handlers and runs initialization.
 - `src/css/control-panel.css` defines the base Material 3-inspired glass-panel design, theme tokens, status and action icon masks, dark theme, accessibility utilities, and primary layout. `src/css/control-panel-responsive.css` layers compact/mobile and short-viewport overrides.
 - `src/icons/` contains 8 SVG assets used by CSS mask images for status and action icons.
-- `public/assets/images/background.png` is the page background, served as a static file.
+- `public/assets/images/background.webp` is the page background, served as a static file.
 - MDUI v2.1.5 and @fontsource packages are imported from `node_modules` by Vite — no vendor sync script is needed. Vite bundles CSS and font files during build.
 
 ## Backend Contract and Page Flow
