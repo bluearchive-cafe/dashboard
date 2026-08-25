@@ -48,9 +48,10 @@ Use the Vite-dev-server page to smoke-test the affected flows:
 - `src/modules/copy-link.js` provides `setupCopyButton()` for the copy-link flow.
 - `src/modules/init.js` provides `init(uidRoute)`, the main orchestration function that wires up event handlers and runs initialization.
 - `src/css/control-panel.css` defines the base Material 3-inspired glass-panel design, theme tokens, status and action icon masks, dark theme, accessibility utilities, and primary layout. `src/css/control-panel-responsive.css` layers compact/mobile and short-viewport overrides.
+- `src/css/fonts-cdn.css` declares the only webfonts on the page: Noto Sans and Noto Sans SC `@font-face` rules (weights 400/500/700, `font-display: swap`) with jsDelivr CDN URLs, so all font files are fetched by the browser at runtime instead of being bundled into `dist/`. All icons use SVG mask images from `src/icons/`, so no icon font is loaded.
 - `src/icons/` contains 8 SVG assets used by CSS mask images for status and action icons.
 - `public/assets/images/background.webp` is the page background, served as a static file.
-- MDUI v2.1.5 and @fontsource packages are imported from `node_modules` by Vite — no vendor sync script is needed. Vite bundles CSS and font files during build.
+- MDUI v2.1.5 is imported from `node_modules` by Vite and bundled during build. All webfonts (Noto Sans and Noto Sans SC) are intentionally loaded from the jsDelivr CDN via `src/css/fonts-cdn.css` (see above) so the build output contains no font files; this is the only CDN dependency in the frontend.
 
 ## Backend Contract and Page Flow
 
@@ -61,7 +62,7 @@ The production page is documented as `https://dash.bluearchive.cafe/?uid=<uid>`;
 3. For a valid UID, initialization requests these endpoints in parallel:
    - `GET https://api.bluearchive.cafe/status/list`
    - `GET https://api.bluearchive.cafe/config/get?uid=<uid>`
-4. The status response is expected to expose `text`, `voice`, and `media`, each with `official.version` and `localized.version`. Matching versions render as `可用`; mismatches render as `待维护`.
+4. The status response is expected to expose `text`, `voice`, and `media`, each with `official.version` and `localized.version`. Matching versions render as `可启用`; mismatches render as `维护中`.
 5. A successful config response supplies `{ text, voice, media }`, where each value is `cn` or `jp`, and sets the corresponding MDUI checkbox. A failed config lookup is intentionally non-blocking for new users.
 6. Saving sends `GET https://api.bluearchive.cafe/config/set?uid=<uid>&text=<cn|jp>&voice=<cn|jp>&media=<cn|jp>`. While it is pending, all interactive controls are disabled.
 7. Requests use the shared timeout-and-retry helpers (10-second timeout, two retries). Status-request failures are recorded so failed status chips can expose diagnostic details.

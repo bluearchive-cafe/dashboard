@@ -57,7 +57,7 @@ export const showHelp = () => {
     headline: '操作说明',
     lines: [
       '1. 先确认各项状态，再决定是否开启对应功能',
-      '2. 只有状态为"可用"时，功能才能正常生效',
+      '2. 只有状态为"可启用"时，功能才能正常生效',
       '3. 主线中配仅对主线剧情内容生效',
       '4. 开启"图像视频"后，可能需要重新下载相关资源',
     ],
@@ -96,7 +96,7 @@ export const showErrorLog = (chipId, { getErrorLog, getErrorName }) => {
   ];
 
   showTextDialog({
-    headline: `「${name}」获取失败`,
+    headline: `「${name}」未获取`,
     lines: detailLines,
     actions: [
       {

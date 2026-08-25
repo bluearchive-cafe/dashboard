@@ -227,7 +227,7 @@ describe('status-display 模块', () => {
     setStatus('text-status', 'ready');
 
     const chip = document.getElementById('text-status');
-    expect(chip.querySelector('.status-label').textContent).toBe('可用');
+    expect(chip.querySelector('.status-label').textContent).toBe('可启用');
     expect(chip.querySelector('.ui-icon').className).toContain('status-icon-ready');
   });
 
@@ -237,7 +237,7 @@ describe('status-display 模块', () => {
 
     const chip = document.getElementById('text-status');
     expect(chip.classList.contains('status-error')).toBe(true);
-    expect(chip.querySelector('.status-label').textContent).toBe('获取失败');
+    expect(chip.querySelector('.status-label').textContent).toBe('未获取');
   });
 
   it('setStatus 跳过无变化的标签和图标写入', async () => {
@@ -269,11 +269,11 @@ describe('status-display 模块', () => {
     });
 
     setStatus('text-status', 'ready');
-    expect(labelWrites).toEqual(['可用']);
+    expect(labelWrites).toEqual(['可启用']);
     expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
 
     setStatus('text-status', 'ready');
-    expect(labelWrites).toEqual(['可用']);
+    expect(labelWrites).toEqual(['可启用']);
     expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
   });
 });

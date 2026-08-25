@@ -301,7 +301,7 @@ body {
     border: 0;
 }
 
-/* 获取失败状态使用 M3 error 色，可点击查看详情 */
+/* 未获取状态使用 M3 error 色，可点击查看详情 */
 .feature-status.status-error {
     cursor: pointer;
 }

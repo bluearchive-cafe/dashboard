@@ -168,11 +168,11 @@ git commit -m "perf(交互): 跳过重复控件禁用写入"
     });
 
     setStatus('text-status', 'ready');
-    expect(labelWrites).toEqual(['可用']);
+    expect(labelWrites).toEqual(['可启用']);
     expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
 
     setStatus('text-status', 'ready');
-    expect(labelWrites).toEqual(['可用']);
+    expect(labelWrites).toEqual(['可启用']);
     expect(iconWrites).toEqual(['ui-icon status-icon-ready']);
   });
 ```
@@ -463,7 +463,7 @@ http://localhost:8080/?uid=ABCDEFGH
 - 三个状态 Chip 能从「加载中」更新为接口结果或失败状态。
 - 三个复选框点击反馈及时，没有明显卡顿。
 - 点击「保存设置」后，保存按钮进入 loading，所有交互控件禁用。
-- 保存完成后，控件恢复可用，成功 Snackbar 或失败 Dialog 正常显示。
+- 保存完成后，控件恢复可启用，成功 Snackbar 或失败 Dialog 正常显示。
 - 「查看说明」「复制链接」「诊断信息」仍能打开对应反馈。
 - 失败状态 Chip 仍支持鼠标点击和键盘 Enter/Space。
 - 窄屏、矮视口和暗色模式下布局未破坏。

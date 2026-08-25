@@ -32,9 +32,9 @@ export const API_ENDPOINTS = {
 
 export const statusStyles = {
   loading: { text: '加载中', css: 'status-icon-loading' },
-  ready: { text: '可用', css: 'status-icon-ready' },
-  waiting: { text: '待维护', css: 'status-icon-waiting' },
-  failed: { text: '获取失败', css: 'status-icon-failed' },
+  ready: { text: '可启用', css: 'status-icon-ready' },
+  waiting: { text: '维护中', css: 'status-icon-waiting' },
+  failed: { text: '未获取', css: 'status-icon-failed' },
 };
 
 export const LANG_CN = 'cn';
